@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net"
@@ -31,6 +32,12 @@ func main() {
 		if err != nil {
 			log.Printf("error readind from stdio: %s", err)
 			return
+		}
+
+		//checking if entered data is a valid json
+		if !json.Valid([]byte(text)) {
+			fmt.Println("The input data is not a valid JSON. Try again...")
+			continue
 		}
 
 		text = fmt.Sprint(text) // to add a newline

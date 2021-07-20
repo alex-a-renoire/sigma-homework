@@ -3,8 +3,9 @@
 It lets clients write data to the database. The basic entity is a person with a certain name. 
 Clients accept data in JSON format, e.g.:
 
-`{"func_name":"AddPerson", "data":{"name":"Bob"}}`
+{"func_name":"AddPerson", "data":{"name":"Bob"}}
 
+{"func_name":"sdfsdf", "data":{"name":"Bob"}}
 Possible values for func_name:
 
 - AddPerson

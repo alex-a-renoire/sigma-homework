@@ -23,6 +23,7 @@ func New(addr string, handler handler.Handler) *TCPServer {
 	if err != nil {
 		log.Fatalf("error listening on %s: %s", addr, err)
 	}
+	log.Print("Server started...")
 
 	return &TCPServer{
 		Quit:     make(chan interface{}),
@@ -39,6 +40,7 @@ func (s *TCPServer) Serve() {
 		if err != nil {
 			select {
 			case <-s.Quit:
+				log.Print("Server terminated")
 				return
 			default:
 				log.Fatalf("error establishing connection: %s", err)
@@ -48,7 +50,7 @@ func (s *TCPServer) Serve() {
 
 		s.Wg.Add(1)
 		go func() {
-			s.Handler.HandleConnection(conn)
+			s.Handler.HandleConnection(conn, s.Quit)
 			s.Wg.Done()
 		}()
 	}
