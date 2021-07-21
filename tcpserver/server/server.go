@@ -49,8 +49,10 @@ func (s *TCPServer) Serve() {
 		log.Print("connection accepted")
 
 		s.Wg.Add(1)
+		
+		go s.Handler.HandleConnection(conn)
 		go func() {
-			s.Handler.HandleConnection(conn, s.Quit)
+			s.Handler.WriterToServer(conn, s.Quit)
 			s.Wg.Done()
 		}()
 	}

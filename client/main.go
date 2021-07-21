@@ -7,22 +7,19 @@ import (
 	"log"
 	"net"
 	"os"
+	"sync"
 
 	dummytcp "github.com/alex-a-renoire/tcp"
 )
 
-func main() {
-	//create connection
-	conn, err := net.Dial("tcp", dummytcp.TCP_ADDR)
-	if err != nil {
-		log.Fatalf("error dialing %s: %s", dummytcp.TCP_ADDR, err)
-	}
+var ch = make(chan string)
 
-	defer conn.Close()
-
+func ClientLoop(conn net.Conn) {
 	//create readers for stdin and for connection
+	writerConn := bufio.NewWriter(conn)
 	readerIO := bufio.NewReader(os.Stdin)
-	rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
+
+	var processedData string
 
 	for {
 		//reading a command from the user
@@ -43,26 +40,64 @@ func main() {
 		text = fmt.Sprint(text) // to add a newline
 
 		//sending to server
-		_, err = rw.Write([]byte(text))
+		_, err = writerConn.Write([]byte(text))
 		if err != nil {
 			log.Printf("failed writing data to connection readwriter: %s", err)
 			return
 		}
 
-		if err = rw.Flush(); err != nil {
+		if err = writerConn.Flush(); err != nil {
 			log.Printf("failed sending the command to server: %s", err)
 			return
 		}
 
 		log.Print("Text sent to server")
 
+		processedData = <-ch
+
+		fmt.Printf("%s \n", processedData)
+	}
+}
+
+func ResponseReadLoop(conn net.Conn) {
+	//create reader
+	readerConn := bufio.NewReader(conn)
+
+	for {
 		//reading the answer from the server
-		processedData, _, err := rw.ReadLine()
+		processedData, _, err := readerConn.ReadLine()
 		if err != nil {
 			log.Printf("failed reading data from server: %s", err)
+			continue
+		}
+
+		if string(processedData) == "abort" {
 			return
 		}
 
-		fmt.Printf("The output is: %s \n", processedData)
+		ch <- string(processedData)
 	}
+}
+
+func main() {
+	wg := sync.WaitGroup{}
+
+	//create connection
+	conn, err := net.Dial("tcp", dummytcp.TCP_ADDR)
+	if err != nil {
+		log.Fatalf("error dialing %s: %s", dummytcp.TCP_ADDR, err)
+	}
+
+	wg.Add(1)
+	go ClientLoop(conn)
+	go func() {
+		ResponseReadLoop(conn)
+		wg.Done()
+	}()
+
+	wg.Wait()
+
+	log.Print("Connection closed by server")
+
+	defer conn.Close()
 }
