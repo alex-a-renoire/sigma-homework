@@ -18,7 +18,7 @@ func New() PersonStorage {
 	return s
 }
 
-func (s *PersonStorage) AddPerson(name string) int {
+func (s *PersonStorage) AddPerson(name string) (int, error) {
 	p := model.Person{
 		Id:   s.LastId,
 		Name: name,
@@ -27,7 +27,7 @@ func (s *PersonStorage) AddPerson(name string) int {
 	s.ListPerson[s.LastId] = p
 	s.LastId = s.LastId + 1
 
-	return p.Id
+	return p.Id, nil
 }
 
 func (s *PersonStorage) GetPerson(id int) (model.Person, error) {
