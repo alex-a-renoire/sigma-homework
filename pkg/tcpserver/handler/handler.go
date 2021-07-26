@@ -8,8 +8,9 @@ import (
 	"log"
 	"net"
 
-	dummytcp "github.com/alex-a-renoire/tcp"
-	"github.com/alex-a-renoire/tcp/storage"
+	"github.com/alex-a-renoire/tcp/model"
+	"github.com/alex-a-renoire/tcp/service"
+	"github.com/alex-a-renoire/tcp/pkg/storage"
 )
 
 type Handler struct {
@@ -22,41 +23,6 @@ func New(s storage.Storage) Handler {
 		Storage: s,
 		Message: make(chan string),
 	}
-}
-
-func (h *Handler) ProcessAction(action dummytcp.Action) string {
-	var response string
-	person := action.Parameters
-
-	switch action.FuncName {
-	case "AddPerson":
-		id := h.Storage.AddPerson(person.Name)
-		response = fmt.Sprintf("Person with id %d and name %s added \n", id, person.Name)
-	case "UpdatePerson":
-		p, err := h.Storage.UpdatePerson(person.Id, person.Name)
-		if err != nil {
-			response = fmt.Sprintf("Person with id %d not found \n", person.Id)
-		} else {
-			response = fmt.Sprintf("Person with id %d updated with name %s \n", p.Id, p.Name)
-		}
-	case "GetPerson":
-		p, err := h.Storage.GetPerson(person.Id)
-		if err != nil {
-			response = fmt.Sprintf("Person with id %d not found \n", person.Id)
-		} else {
-			response = fmt.Sprintf("Person with id %d has name %s \n", p.Id, p.Name)
-		}
-	case "DeletePerson":
-		if err := h.Storage.DeletePerson(person.Id); err != nil {
-			response = fmt.Sprintf("Person with id %d not found \n", person.Id)
-		} else {
-			response = fmt.Sprintf("Person with id %d deleted \n", person.Id)
-		}
-	default:
-		response = fmt.Sprintf("%s is not a valid command. Try again... \n", action.FuncName)
-	}
-
-	return response
 }
 
 func (h *Handler) HandleConnection(conn net.Conn) {
@@ -81,7 +47,7 @@ func (h *Handler) HandleConnection(conn net.Conn) {
 		}
 
 		//Unmarshall type of action and parameters
-		action := dummytcp.Action{}
+		action := model.Action{}
 		if err := json.Unmarshal(s, &action); err != nil {
 			response = fmt.Sprintf("unable to unmarshal action json, some fields are not valid: %s \n", err)
 			h.Message <- response
@@ -97,7 +63,7 @@ func (h *Handler) HandleConnection(conn net.Conn) {
 		log.Printf("Command received: %s", s)
 
 		//Select the correct action and perform it in the database
-		response = h.ProcessAction(action)
+		response = service.ProcessAction(h.Storage, action)
 
 		h.Message <- response
 		log.Print("message sent to channel")

@@ -5,13 +5,29 @@ import (
 	"os/signal"
 	"syscall"
 
-	dummytcp "github.com/alex-a-renoire/tcp"
-	"github.com/alex-a-renoire/tcp/storage/inmemory"
-	"github.com/alex-a-renoire/tcp/tcpserver/handler"
-	"github.com/alex-a-renoire/tcp/tcpserver/server"
+	"github.com/alex-a-renoire/tcp/pkg/tcpserver/handler"
+	"github.com/alex-a-renoire/tcp/pkg/storage/inmemory"
+	"github.com/alex-a-renoire/tcp/pkg/tcpserver"
 )
 
+type config struct {
+	TCPAddr     string
+}
+
+func getCfg() config {
+	TCPAddr := os.Getenv("TCP_ADDR")
+	if TCPAddr == "" {
+		TCPAddr = "127.0.0.1:8080"
+	}
+
+	return config {
+		TCPAddr: TCPAddr,
+	}
+}
+
 func main() {
+	cfg := getCfg()
+
 	//create a storage
 	s := inmemory.New()
 
@@ -19,7 +35,7 @@ func main() {
 	h := handler.New(&s)
 
 	//create a server
-	srv := server.New(dummytcp.TCP_ADDR, h)
+	srv := tcpserver.New(cfg.TCPAddr, h)
 
 	//Graceful shutdown
 	sigC := make(chan os.Signal, 1)

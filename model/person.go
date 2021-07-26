@@ -1,4 +1,4 @@
-package dummytcp
+package model
 
 import "fmt"
 

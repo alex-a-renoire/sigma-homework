@@ -8,11 +8,24 @@ import (
 	"net"
 	"os"
 	"sync"
-
-	dummytcp "github.com/alex-a-renoire/tcp"
 )
 
 var ch = make(chan string)
+
+type config struct {
+	TCPAddr     string
+}
+
+func getCfg() config {
+	TCPAddr := os.Getenv("TCP_ADDR")
+	if TCPAddr == "" {
+		TCPAddr = "127.0.0.1:8080"
+	}
+
+	return config {
+		TCPAddr: TCPAddr,
+	}
+}
 
 func ClientLoop(conn net.Conn) {
 	//create readers for stdin and for connection
@@ -80,12 +93,14 @@ func ResponseReadLoop(conn net.Conn) {
 }
 
 func main() {
+	cfg := getCfg()
+
 	wg := sync.WaitGroup{}
 
 	//create connection
-	conn, err := net.Dial("tcp", dummytcp.TCP_ADDR)
+	conn, err := net.Dial("tcp", cfg.TCPAddr)
 	if err != nil {
-		log.Fatalf("error dialing %s: %s", dummytcp.TCP_ADDR, err)
+		log.Fatalf("error dialing %s: %s", cfg.TCPAddr, err)
 	}
 
 	wg.Add(1)

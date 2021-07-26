@@ -1,11 +1,11 @@
-package server
+package tcpserver
 
 import (
 	"log"
 	"net"
 	"sync"
 
-	"github.com/alex-a-renoire/tcp/tcpserver/handler"
+	"github.com/alex-a-renoire/tcp/pkg/tcpserver/handler"
 )
 
 type TCPServer struct {
@@ -49,7 +49,7 @@ func (s *TCPServer) Serve() {
 		log.Print("connection accepted")
 
 		s.Wg.Add(1)
-		
+
 		go s.Handler.HandleConnection(conn)
 		go func() {
 			s.Handler.WriterToServer(conn, s.Quit)
