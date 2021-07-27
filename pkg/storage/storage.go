@@ -1,6 +1,6 @@
 package storage
 
-import "github.com/alex-a-renoire/tcp/model"
+import "github.com/alex-a-renoire/sigma-homework/model"
 
 type Storage interface {
 	AddPerson(name string) (int, error)

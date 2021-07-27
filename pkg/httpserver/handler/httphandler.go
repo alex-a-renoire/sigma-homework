@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/alex-a-renoire/tcp/model"
-	"github.com/alex-a-renoire/tcp/pkg/storage"
-	"github.com/alex-a-renoire/tcp/service"
+	"github.com/alex-a-renoire/sigma-homework/model"
+	"github.com/alex-a-renoire/sigma-homework/pkg/storage"
+	"github.com/alex-a-renoire/sigma-homework/service"
 	"github.com/gorilla/mux"
 )
 

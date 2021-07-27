@@ -3,16 +3,16 @@ package service
 import (
 	"fmt"
 
-	"github.com/alex-a-renoire/tcp/model"
-	"github.com/alex-a-renoire/tcp/pkg/storage"
+	"github.com/alex-a-renoire/sigma-homework/model"
+	"github.com/alex-a-renoire/sigma-homework/pkg/storage"
 )
 
 func ProcessAction(s storage.Storage, action model.Action) (string, error) {
 	var response string
 	var err error = nil
 	person := action.Parameters
-	
-	if err := person.Validate(); err!= nil && action.FuncName != "GetAllPersons" {
+
+	if err := person.Validate(); err != nil && action.FuncName != "GetAllPersons" {
 		return "Person name or id not specified", err
 	}
 

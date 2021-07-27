@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/alex-a-renoire/tcp/model"
-	"github.com/alex-a-renoire/tcp/pkg/storage"
+	"github.com/alex-a-renoire/sigma-homework/model"
+	"github.com/alex-a-renoire/sigma-homework/pkg/storage"
 )
 
 func TestProcessAction(t *testing.T) {

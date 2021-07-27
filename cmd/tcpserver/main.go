@@ -5,13 +5,13 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/alex-a-renoire/tcp/pkg/tcpserver/handler"
-	"github.com/alex-a-renoire/tcp/pkg/storage/inmemory"
-	"github.com/alex-a-renoire/tcp/pkg/tcpserver"
+	"github.com/alex-a-renoire/sigma-homework/pkg/storage/inmemory"
+	"github.com/alex-a-renoire/sigma-homework/pkg/tcpserver"
+	"github.com/alex-a-renoire/sigma-homework/pkg/tcpserver/handler"
 )
 
 type config struct {
-	TCPAddr     string
+	TCPAddr string
 }
 
 func getCfg() config {
@@ -20,7 +20,7 @@ func getCfg() config {
 		TCPAddr = "127.0.0.1:8080"
 	}
 
-	return config {
+	return config{
 		TCPAddr: TCPAddr,
 	}
 }

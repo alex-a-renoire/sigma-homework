@@ -1,4 +1,4 @@
-module github.com/alex-a-renoire/tcp
+module github.com/alex-a-renoire/sigma-homework
 
 go 1.16
 

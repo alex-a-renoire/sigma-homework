@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/alex-a-renoire/tcp/model"
+	"github.com/alex-a-renoire/sigma-homework/model"
 )
 
 type PersonStorage struct {
 	MapPerson map[int]model.Person
-	LastId     int
-	mu sync.Mutex
+	LastId    int
+	mu        sync.Mutex
 }
 
 func New() *PersonStorage {
@@ -38,7 +38,7 @@ func (s *PersonStorage) GetPerson(id int) (model.Person, error) {
 	s.mu.Lock()
 	val, ok := s.MapPerson[id]
 	s.mu.Unlock()
-	
+
 	if !ok {
 		return model.Person{}, fmt.Errorf("person with id %d not found", id)
 	}
@@ -49,9 +49,9 @@ func (s *PersonStorage) GetAllPersons() ([]model.Person, error) {
 	s.mu.Lock()
 	persons := make([]model.Person, 0, len(s.MapPerson))
 
-    for _, person := range s.MapPerson {
-        persons = append(persons, person)
-    }
+	for _, person := range s.MapPerson {
+		persons = append(persons, person)
+	}
 	s.mu.Unlock()
 	return persons, nil
 }

@@ -5,7 +5,7 @@ import (
 	"net"
 	"sync"
 
-	"github.com/alex-a-renoire/tcp/pkg/tcpserver/handler"
+	"github.com/alex-a-renoire/sigma-homework/pkg/tcpserver/handler"
 )
 
 type TCPServer struct {

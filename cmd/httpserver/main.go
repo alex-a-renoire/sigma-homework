@@ -8,8 +8,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	httphandler "github.com/alex-a-renoire/tcp/pkg/httpserver/handler"
-	"github.com/alex-a-renoire/tcp/pkg/storage/inmemory"
+	httphandler "github.com/alex-a-renoire/sigma-homework/pkg/httpserver/handler"
+	"github.com/alex-a-renoire/sigma-homework/pkg/storage/inmemory"
 )
 
 type config struct {
