@@ -1,10 +1,15 @@
-.PHONY: server 
-server:
-	export TCP_ADDR=192.168.0.1:8080
-	go run cmd/server/*.go
+.PHONY: tcpserver 
+tcpserver:
+	export TCP_ADDR=127.0.0.1:8080
+	go run cmd/tcpserver/*.go
 
 
-.PHONY: client
-client:
-	export TCP_ADDR=192.168.0.1:8080
-	go run cmd/cleint/client.go
+.PHONY: tcpclient
+tcpclient:
+	export TCP_ADDR=127.0.0.1:8080
+	go run cmd/client/main.go
+
+.PHONY: httpserver 
+httpserver:
+	export HTTP_ADDR=127.0.0.1:8081
+	go run cmd/httpserver/*.go

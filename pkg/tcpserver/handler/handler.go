@@ -63,7 +63,7 @@ func (h *Handler) HandleConnection(conn net.Conn) {
 		log.Printf("Command received: %s", s)
 
 		//Select the correct action and perform it in the database
-		response = service.ProcessAction(h.Storage, action)
+		response, err = service.ProcessAction(h.Storage, action)
 
 		h.Message <- response
 		log.Print("message sent to channel")

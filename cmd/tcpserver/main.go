@@ -32,7 +32,7 @@ func main() {
 	s := inmemory.New()
 
 	//create a request handler
-	h := handler.New(&s)
+	h := handler.New(s)
 
 	//create a server
 	srv := tcpserver.New(cfg.TCPAddr, h)

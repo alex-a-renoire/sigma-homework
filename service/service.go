@@ -7,10 +7,14 @@ import (
 	"github.com/alex-a-renoire/tcp/pkg/storage"
 )
 
-//TODO детали ошибки должны прилетать из стораджа
-func ProcessAction(s storage.Storage, action model.Action) string {
+func ProcessAction(s storage.Storage, action model.Action) (string, error) {
 	var response string
+	var err error = nil
 	person := action.Parameters
+	
+	if err := person.Validate(); err!= nil && action.FuncName != "GetAllPersons" {
+		return "Person name or id not specified", err
+	}
 
 	switch action.FuncName {
 	case "AddPerson":
@@ -34,8 +38,16 @@ func ProcessAction(s storage.Storage, action model.Action) string {
 		} else {
 			response = fmt.Sprintf("Person with id %d has name %s \n", p.Id, p.Name)
 		}
+
+	case "GetAllPersons":
+		p, err := s.GetAllPersons()
+		if err != nil {
+			response = fmt.Sprintf("error: %s \n", err)
+		} else {
+			response = fmt.Sprintf("All persons in the storage are %v \n", p)
+		}
 	case "DeletePerson":
-		if err := s.DeletePerson(person.Id); err != nil {
+		if err = s.DeletePerson(person.Id); err != nil {
 			response = fmt.Sprintf("error: %s \n", err)
 		} else {
 			response = fmt.Sprintf("Person with id %d deleted \n", person.Id)
@@ -44,5 +56,5 @@ func ProcessAction(s storage.Storage, action model.Action) string {
 		response = fmt.Sprintf("%s is not a valid command. Try again... \n", action.FuncName)
 	}
 
-	return response
+	return response, err
 }
