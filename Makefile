@@ -13,3 +13,7 @@ tcpclient:
 httpserver:
 	export HTTP_ADDR=127.0.0.1:8081
 	go run cmd/httpserver/*.go
+
+.PHONY: test 
+test:
+	go test ./service
