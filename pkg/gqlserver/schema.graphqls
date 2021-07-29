@@ -1,0 +1,26 @@
+"https://levelup.gitconnected.com/graphql-server-api-in-golang-601e41408d03"
+
+schema { 
+  query: Query
+  mutation: Mutation
+}
+
+type Query {
+    listPersons: [Person]
+    getPerson(Id: Int!): Person
+}
+
+type Mutation {
+    addPerson(input: PersonInput!): Int
+    updatePerson(id: ID!, input: PersonInput!): Person
+    deletePerson(id: ID!): String
+}
+
+type Person {
+    id: Int!
+    name: String!
+}
+
+input PersonInput {
+    name: String!
+}
