@@ -15,34 +15,32 @@ import (
 
 type Handler struct {
 	Storage storage.Storage
-	Message chan string
 }
 
 func New(s storage.Storage) Handler {
 	return Handler{
 		Storage: s,
-		Message: make(chan string),
 	}
 }
 
-func (h *Handler) HandleConnection(conn net.Conn) {
+func (h *Handler) HandleConnection(conn net.Conn, message chan string, connNumber int) {
 	//create connnection readwriter
 	reader := bufio.NewReader(conn)
 	log.Print("readwriter created")
 	var response string
 
 	for {
-		log.Print("waiting for the client to send action")
+		log.Printf("waiting for the client #%d to send action", connNumber)
 
 		//read data from connection
 		s, err := reader.ReadBytes('\n')
 		if err != nil {
 			if err == io.EOF {
-				//TODO: Maybe add numbers to connected clients?
-				log.Printf("client closed the connection")
+				log.Printf("client #%d closed the connection", connNumber)
 			} else {
-				log.Printf("failed reading from connection: %s", err)
+				log.Printf("failed reading from connection %d: %s", connNumber, err)
 			}
+			close(message)
 			return
 		}
 
@@ -50,13 +48,13 @@ func (h *Handler) HandleConnection(conn net.Conn) {
 		action := model.Action{}
 		if err := json.Unmarshal(s, &action); err != nil {
 			response = fmt.Sprintf("unable to unmarshal action json, some fields are not valid: %s \n", err)
-			h.Message <- response
+			message <- response
 			continue
 		}
 
 		if err := action.Validate(); err != nil {
 			response = fmt.Sprintf("action json is not valid: %s \n", err)
-			h.Message <- response
+			message <- response
 			continue
 		}
 
@@ -64,13 +62,18 @@ func (h *Handler) HandleConnection(conn net.Conn) {
 
 		//Select the correct action and perform it in the database
 		response, err = service.ProcessAction(h.Storage, action)
+		if err != nil {
+			response = fmt.Sprintf("error processing action: %s \n", err)
+			message <- response
+			continue
+		}
 
-		h.Message <- response
-		log.Print("message sent to channel")
+		message <- response
+		log.Print("message sent to server writer loop")
 	}
 }
 
-func (h *Handler) WriterToServer(conn net.Conn, quit chan interface{}) {
+func (h *Handler) WriterToServer(conn net.Conn, message chan string, quit chan interface{}, connNumber int) {
 	writer := bufio.NewWriter(conn)
 	var response string
 
@@ -78,11 +81,12 @@ func (h *Handler) WriterToServer(conn net.Conn, quit chan interface{}) {
 		select {
 		case <-quit:
 			response = "abort"
-		case m := <-h.Message:
+		case m := <-message:
 			response = m
 		}
 
-		log.Printf("Message received from channel")
+		log.Printf("Server Writer Loop for conn %d: Message received from handler", connNumber)
+		log.Print(response)
 
 		_, err := writer.Write([]byte(response))
 		if err != nil {
@@ -99,7 +103,7 @@ func (h *Handler) WriterToServer(conn net.Conn, quit chan interface{}) {
 		if response == "abort" {
 			return
 		} else {
-			log.Print("action completed")
+			log.Printf("action for conn %d completed", connNumber)
 		}
 	}
 }

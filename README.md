@@ -5,6 +5,7 @@ Clients accept data in JSON format, e.g.:
 
 - AddPerson {"func_name":"AddPerson", "data":{"name":"Bob"}}
 - GetPerson {"func_name":"GetPerson", "data":{"id":1}}
+- GetAllPersons {"func_name":"GetAllPersons", "data":{}}
 - UpdatePerson {"func_name":"UpdatePerson", "data":{"id":1, "name":"Alice"}}
 - DeletePerson {"func_name":"DeletePerson", "data":{"id":1}}
 
@@ -20,6 +21,7 @@ Clients accept data in JSON format, e.g.:
 
 make tcpserver
 make tcpclient
+make test
 
 ## How to run http-app
 

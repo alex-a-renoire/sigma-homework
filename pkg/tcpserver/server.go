@@ -13,6 +13,7 @@ type TCPServer struct {
 	Handler  handler.Handler
 	Quit     chan interface{}
 	Wg       sync.WaitGroup
+	connCounter int
 }
 
 func New(addr string, handler handler.Handler) *TCPServer {
@@ -29,6 +30,7 @@ func New(addr string, handler handler.Handler) *TCPServer {
 		Quit:     make(chan interface{}),
 		Listener: listener,
 		Handler:  handler,
+		connCounter: 0,
 	}
 }
 
@@ -36,6 +38,8 @@ func (s *TCPServer) Serve() {
 	defer s.Wg.Done()
 
 	for {
+		s.connCounter++
+		numClient := s.connCounter
 		conn, err := s.Listener.Accept()
 		if err != nil {
 			select {
@@ -50,9 +54,11 @@ func (s *TCPServer) Serve() {
 
 		s.Wg.Add(1)
 
-		go s.Handler.HandleConnection(conn)
+		ch := make (chan string)
+
+		go s.Handler.HandleConnection(conn, ch, numClient)
 		go func() {
-			s.Handler.WriterToServer(conn, s.Quit)
+			s.Handler.WriterToServer(conn, ch, s.Quit, numClient)
 			s.Wg.Done()
 		}()
 	}

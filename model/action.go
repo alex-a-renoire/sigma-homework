@@ -11,7 +11,6 @@ func (a *Action) Validate() error {
 	if a.FuncName == "" {
 		return fmt.Errorf("Action is not specified, field func_name is empty or wrongly spelled")
 	}
-
-	//validate person
-	return a.Parameters.Validate()
+	
+	return nil
 }
