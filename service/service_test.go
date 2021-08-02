@@ -9,23 +9,28 @@ import (
 )
 
 func TestProcessAction(t *testing.T) {
-	type args struct {
+	type fields struct {
 		s      storage.Storage
+	}
+	type args struct {
 		action model.Action
 	}
 	tests := []struct {
+		fields fields
 		name string
 		args args
 		want string
 	}{
 		{
 			name: "AddPerson OK",
-			args: args{
+			fields: fields{
 				s: storage.MockStorage{
 					MockAddPerson: func(_ string) (int, error) {
 						return 1, nil
 					},
 				},
+			},
+			args: args{
 				action: model.Action{
 					FuncName: "AddPerson",
 					Parameters: model.Person{
@@ -37,12 +42,14 @@ func TestProcessAction(t *testing.T) {
 		},
 		{
 			name: "AddPerson not OK",
-			args: args{
+			fields: fields{
 				s: storage.MockStorage{
 					MockAddPerson: func(_ string) (int, error) {
 						return 0, fmt.Errorf("failed to add person to db")
 					},
 				},
+			},
+			args: args{
 				action: model.Action{
 					FuncName: "AddPerson",
 					Parameters: model.Person{
@@ -54,7 +61,7 @@ func TestProcessAction(t *testing.T) {
 		},
 		{
 			name: "GetPerson OK",
-			args: args{
+			fields: fields{
 				s: storage.MockStorage{
 					MockGetPerson: func(id int) (model.Person, error) {
 						return model.Person{
@@ -63,6 +70,8 @@ func TestProcessAction(t *testing.T) {
 						}, nil
 					},
 				},
+			},
+			args: args{
 				action: model.Action{
 					FuncName: "GetPerson",
 					Parameters: model.Person{
@@ -74,12 +83,14 @@ func TestProcessAction(t *testing.T) {
 		},
 		{
 			name: "GetPerson not OK",
-			args: args{
+			fields: fields{
 				s: storage.MockStorage{
 					MockGetPerson: func(id int) (model.Person, error) {
 						return model.Person{}, fmt.Errorf("person not found")
 					},
 				},
+			},
+			args: args{
 				action: model.Action{
 					FuncName: "GetPerson",
 					Parameters: model.Person{
@@ -91,7 +102,7 @@ func TestProcessAction(t *testing.T) {
 		},
 		{
 			name: "UpdatePerson OK",
-			args: args{
+			fields: fields{
 				s: storage.MockStorage{
 					MockUpdatePerson: func(id int, name string) (model.Person, error) {
 						return model.Person{
@@ -100,6 +111,8 @@ func TestProcessAction(t *testing.T) {
 						}, nil
 					},
 				},
+			},
+			args: args{
 				action: model.Action{
 					FuncName: "UpdatePerson",
 					Parameters: model.Person{
@@ -112,12 +125,14 @@ func TestProcessAction(t *testing.T) {
 		},
 		{
 			name: "UpdatePerson not OK",
-			args: args{
+			fields: fields{
 				s: storage.MockStorage{
 					MockUpdatePerson: func(id int, name string) (model.Person, error) {
 						return model.Person{}, fmt.Errorf("person not found")
 					},
 				},
+			},
+			args: args{	
 				action: model.Action{
 					FuncName: "UpdatePerson",
 					Parameters: model.Person{
@@ -130,12 +145,14 @@ func TestProcessAction(t *testing.T) {
 		},
 		{
 			name: "DeletePerson OK",
-			args: args{
+			fields: fields{
 				s: storage.MockStorage{
 					MockDeletePerson: func(_ int) error {
 						return nil
 					},
 				},
+			},
+			args: args{
 				action: model.Action{
 					FuncName: "DeletePerson",
 					Parameters: model.Person{
@@ -147,12 +164,14 @@ func TestProcessAction(t *testing.T) {
 		},
 		{
 			name: "DeletePerson not OK",
-			args: args{
+			fields: fields{
 				s: storage.MockStorage{
 					MockDeletePerson: func(_ int) error {
 						return fmt.Errorf("person not found")
 					},
 				},
+			},
+			args: args{
 				action: model.Action{
 					FuncName: "DeletePerson",
 					Parameters: model.Person{
@@ -164,8 +183,10 @@ func TestProcessAction(t *testing.T) {
 		},
 		{
 			name: "Invalid action",
+			fields: fields{
+				s: storage.MockStorage{},
+			},
 			args: args{
-				s: nil,
 				action: model.Action{
 					FuncName:   "InvalidAction",
 					Parameters: model.Person{},
@@ -176,7 +197,8 @@ func TestProcessAction(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got, _ := ProcessAction(tt.args.s, tt.args.action); got != tt.want {
+			ps := New(tt.fields.s)
+			if got, _ := ps.ProcessAction(tt.args.action); got != tt.want {
 				t.Errorf("ProcessAction() = %v, want %v", got, tt.want)
 			}
 		})

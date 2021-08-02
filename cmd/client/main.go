@@ -102,6 +102,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("error dialing %s: %s", cfg.TCPAddr, err)
 	}
+	defer conn.Close()
 
 	wg.Add(1)
 	go ClientLoop(conn)
@@ -113,6 +114,4 @@ func main() {
 	wg.Wait()
 
 	log.Print("Connection closed by server")
-
-	defer conn.Close()
 }

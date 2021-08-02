@@ -8,18 +8,17 @@ import (
 	"strconv"
 
 	"github.com/alex-a-renoire/sigma-homework/model"
-	"github.com/alex-a-renoire/sigma-homework/pkg/storage"
 	"github.com/alex-a-renoire/sigma-homework/service"
 	"github.com/gorilla/mux"
 )
 
 type HTTPHandler struct {
-	storage storage.Storage
+	service service.PersonService
 }
 
-func New(db storage.Storage) HTTPHandler {
+func New(service service.PersonService) HTTPHandler {
 	return HTTPHandler{
-		storage: db,
+		service: service,
 	}
 }
 
@@ -75,7 +74,7 @@ func (s *HTTPHandler) AddPerson(w http.ResponseWriter, req *http.Request) {
 	}
 
 	//send the appropriate action to service
-	res, err := service.ProcessAction(s.storage, model.Action{
+	res, err := s.service.ProcessAction(model.Action{
 		FuncName:   "AddPerson",
 		Parameters: item,
 	},
@@ -103,7 +102,7 @@ func (s *HTTPHandler) GetPerson(w http.ResponseWriter, req *http.Request) {
 	}
 
 	//Ask the service to process action
-	res, err := service.ProcessAction(s.storage, model.Action{
+	res, err := s.service.ProcessAction(model.Action{
 		FuncName:   "GetPerson",
 		Parameters: model.Person{Id: id},
 	},
@@ -122,7 +121,7 @@ func (s *HTTPHandler) GetAllPersons(w http.ResponseWriter, req *http.Request) {
 	log.Print("Command GetAllPersons received")
 
 	//Ask the service to process action
-	res, err := service.ProcessAction(s.storage, model.Action{
+	res, err := s.service.ProcessAction(model.Action{
 		FuncName:   "GetAllPersons",
 		Parameters: model.Person{},
 	},
@@ -169,7 +168,7 @@ func (s *HTTPHandler) UpdatePerson(w http.ResponseWriter, req *http.Request) {
 	item.Id = id
 
 	//Ask the service to process action
-	res, err := service.ProcessAction(s.storage, model.Action{
+	res, err := s.service.ProcessAction(model.Action{
 		FuncName:   "UpdatePerson",
 		Parameters: item,
 	},
@@ -196,7 +195,7 @@ func (s *HTTPHandler) DeletePerson(w http.ResponseWriter, req *http.Request) {
 	}
 
 	//Ask the service to process action
-	res, err := service.ProcessAction(s.storage, model.Action{
+	res, err := s.service.ProcessAction(model.Action{
 		FuncName: "DeletePerson",
 		Parameters: model.Person{
 			Id: id,

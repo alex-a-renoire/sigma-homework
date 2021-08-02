@@ -35,7 +35,7 @@ func New(addr string, handler handler.Handler) *TCPServer {
 }
 
 func (s *TCPServer) Serve() {
-	defer s.Wg.Done()
+	//defer s.Wg.Done()
 
 	for {
 		s.connCounter++

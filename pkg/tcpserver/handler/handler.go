@@ -9,17 +9,16 @@ import (
 	"net"
 
 	"github.com/alex-a-renoire/sigma-homework/model"
-	"github.com/alex-a-renoire/sigma-homework/pkg/storage"
 	"github.com/alex-a-renoire/sigma-homework/service"
 )
 
 type Handler struct {
-	Storage storage.Storage
+	Service service.PersonService
 }
 
-func New(s storage.Storage) Handler {
+func New(s service.PersonService) Handler {
 	return Handler{
-		Storage: s,
+		Service: s,
 	}
 }
 
@@ -61,7 +60,7 @@ func (h *Handler) HandleConnection(conn net.Conn, message chan string, connNumbe
 		log.Printf("Command received: %s", s)
 
 		//Select the correct action and perform it in the database
-		response, err = service.ProcessAction(h.Storage, action)
+		response, err = h.Service.ProcessAction(action)
 		if err != nil {
 			response = fmt.Sprintf("error processing action: %s \n", err)
 			message <- response

@@ -10,6 +10,7 @@ import (
 
 	httphandler "github.com/alex-a-renoire/sigma-homework/pkg/httpserver/handler"
 	"github.com/alex-a-renoire/sigma-homework/pkg/storage/inmemory"
+	"github.com/alex-a-renoire/sigma-homework/service"
 )
 
 type config struct {
@@ -32,7 +33,9 @@ func main() {
 
 	db := inmemory.New()
 
-	sh := httphandler.New(db)
+	service := service.New(db)
+
+	sh := httphandler.New(service)
 
 	srv := http.Server{
 		Addr:    cfg.HTTPAddr,

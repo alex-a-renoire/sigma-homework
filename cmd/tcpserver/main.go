@@ -8,6 +8,7 @@ import (
 	"github.com/alex-a-renoire/sigma-homework/pkg/storage/inmemory"
 	"github.com/alex-a-renoire/sigma-homework/pkg/tcpserver"
 	"github.com/alex-a-renoire/sigma-homework/pkg/tcpserver/handler"
+	"github.com/alex-a-renoire/sigma-homework/service"
 )
 
 type config struct {
@@ -31,8 +32,11 @@ func main() {
 	//create a storage
 	s := inmemory.New()
 
+	//create a service
+	service := service.New(s)
+
 	//create a request handler
-	h := handler.New(s)
+	h := handler.New(service)
 
 	//create a server
 	srv := tcpserver.New(cfg.TCPAddr, h)
