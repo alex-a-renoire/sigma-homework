@@ -32,12 +32,16 @@ func getCfg() config {
 func main() {
 	cfg := getCfg()
 
+	//create storage
 	db := inmemory.New()
 
+	//create service with storage
 	service := service.New(db)
 
+	//create controller with service
 	controller := controllers.New(service)
 
+	//create handler with controller
 	sh := httphandler.New(controller)
 
 	srv := http.Server{
