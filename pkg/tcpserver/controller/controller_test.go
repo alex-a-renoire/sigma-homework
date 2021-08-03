@@ -1,4 +1,4 @@
-package service
+package tcpcontroller
 
 import (
 	"fmt"
@@ -6,20 +6,21 @@ import (
 
 	"github.com/alex-a-renoire/sigma-homework/model"
 	"github.com/alex-a-renoire/sigma-homework/pkg/storage"
+	"github.com/alex-a-renoire/sigma-homework/service"
 )
 
 func TestProcessAction(t *testing.T) {
 	type fields struct {
-		s      storage.Storage
+		s storage.Storage
 	}
 	type args struct {
 		action model.Action
 	}
 	tests := []struct {
 		fields fields
-		name string
-		args args
-		want string
+		name   string
+		args   args
+		want   string
 	}{
 		{
 			name: "AddPerson OK",
@@ -132,7 +133,7 @@ func TestProcessAction(t *testing.T) {
 					},
 				},
 			},
-			args: args{	
+			args: args{
 				action: model.Action{
 					FuncName: "UpdatePerson",
 					Parameters: model.Person{
@@ -197,7 +198,7 @@ func TestProcessAction(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ps := New(tt.fields.s)
+			ps := New(service.New(tt.fields.s))
 			if got, _ := ps.ProcessAction(tt.args.action); got != tt.want {
 				t.Errorf("ProcessAction() = %v, want %v", got, tt.want)
 			}

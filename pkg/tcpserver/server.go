@@ -9,10 +9,10 @@ import (
 )
 
 type TCPServer struct {
-	Listener net.Listener
-	Handler  handler.Handler
-	Quit     chan interface{}
-	Wg       sync.WaitGroup
+	Listener    net.Listener
+	Handler     handler.Handler
+	Quit        chan interface{}
+	Wg          sync.WaitGroup
 	connCounter int
 }
 
@@ -27,9 +27,9 @@ func New(addr string, handler handler.Handler) *TCPServer {
 	log.Print("Server started...")
 
 	return &TCPServer{
-		Quit:     make(chan interface{}),
-		Listener: listener,
-		Handler:  handler,
+		Quit:        make(chan interface{}),
+		Listener:    listener,
+		Handler:     handler,
 		connCounter: 0,
 	}
 }
@@ -54,7 +54,7 @@ func (s *TCPServer) Serve() {
 
 		s.Wg.Add(1)
 
-		ch := make (chan string)
+		ch := make(chan string)
 
 		go s.Handler.HandleConnection(conn, ch, numClient)
 		go func() {

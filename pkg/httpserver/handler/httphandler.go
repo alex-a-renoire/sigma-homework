@@ -2,23 +2,24 @@ package httphandler
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/alex-a-renoire/sigma-homework/model"
-	"github.com/alex-a-renoire/sigma-homework/pkg/httpserver/controllers"
+	"github.com/alex-a-renoire/sigma-homework/service"
 	"github.com/gorilla/mux"
 )
 
 type HTTPHandler struct {
-	PController controllers.PersonController
+	service service.PersonService
 }
 
-func New(controller controllers.PersonController) HTTPHandler {
+func New(service service.PersonService) HTTPHandler {
 	return HTTPHandler{
-		PController: controller,
+		service: service,
 	}
 }
 
@@ -67,14 +68,14 @@ func (s *HTTPHandler) AddPerson(w http.ResponseWriter, req *http.Request) {
 	}
 
 	//Unmarshal person
-	item := model.Person{}
-	if err = json.Unmarshal(p, &item); err != nil {
+	person := model.Person{}
+	if err = json.Unmarshal(p, &person); err != nil {
 		s.reportError(w, err)
 		return
 	}
 
 	//send the appropriate action to service
-	res, err := s.PController.AddPerson(item)
+	id, err := s.service.AddPerson(person.Name)
 	if err != nil {
 		s.reportError(w, err)
 		return
@@ -83,7 +84,7 @@ func (s *HTTPHandler) AddPerson(w http.ResponseWriter, req *http.Request) {
 	//write the data to response
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(res))
+	w.Write([]byte(fmt.Sprintf("Person with id %d and name %s added \n", id, person.Name)))
 }
 
 func (s *HTTPHandler) GetPerson(w http.ResponseWriter, req *http.Request) {
@@ -98,7 +99,7 @@ func (s *HTTPHandler) GetPerson(w http.ResponseWriter, req *http.Request) {
 	}
 
 	//Ask the service to process action
-	res, err := s.PController.GetPerson(id)
+	person, err := s.service.GetPerson(id)
 	if err != nil {
 		s.reportError(w, err)
 		return
@@ -106,14 +107,14 @@ func (s *HTTPHandler) GetPerson(w http.ResponseWriter, req *http.Request) {
 
 	//write the data to response
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(res))
+	w.Write([]byte(fmt.Sprintf("Person with id %d has name %s \n", person.Id, person.Name)))
 }
 
 func (s *HTTPHandler) GetAllPersons(w http.ResponseWriter, req *http.Request) {
 	log.Print("Command GetAllPersons received")
 
 	//Ask the service to process action
-	res, err := s.PController.GetAllPersons()
+	persons, err := s.service.GetAllPersons()
 	if err != nil {
 		s.reportError(w, err)
 		return
@@ -121,7 +122,7 @@ func (s *HTTPHandler) GetAllPersons(w http.ResponseWriter, req *http.Request) {
 
 	//write the data to response
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(res))
+	w.Write([]byte(fmt.Sprintf("All persons in the storage are %v \n", persons)))
 }
 
 func (s *HTTPHandler) UpdatePerson(w http.ResponseWriter, req *http.Request) {
@@ -143,17 +144,14 @@ func (s *HTTPHandler) UpdatePerson(w http.ResponseWriter, req *http.Request) {
 	}
 
 	//unmarshal person
-	item := model.Person{}
-	if err = json.Unmarshal(p, &item); err != nil {
+	person := model.Person{}
+	if err = json.Unmarshal(p, &person); err != nil {
 		s.reportError(w, err)
 		return
 	}
 
-	//add ID to the person object.
-	item.Id = id
-
 	//Ask the service to process action
-	res, err := s.PController.UpdatePerson(item)
+	updatedPerson, err := s.service.UpdatePerson(id, person.Name)
 	if err != nil {
 		s.reportError(w, err)
 		return
@@ -161,7 +159,7 @@ func (s *HTTPHandler) UpdatePerson(w http.ResponseWriter, req *http.Request) {
 
 	//write the data to response
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(res))
+	w.Write([]byte(fmt.Sprintf("Person with id %d updated with name %s \n", updatedPerson.Id, updatedPerson.Name)))
 }
 
 func (s *HTTPHandler) DeletePerson(w http.ResponseWriter, req *http.Request) {
@@ -176,13 +174,12 @@ func (s *HTTPHandler) DeletePerson(w http.ResponseWriter, req *http.Request) {
 	}
 
 	//Ask the service to process action
-	res, err := s.PController.DeletePerson(id)
-	if err != nil {
+	if err := s.service.DeletePerson(id); err != nil {
 		s.reportError(w, err)
 		return
 	}
 
 	//write the data to response
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(res))
+	w.Write([]byte(fmt.Sprintf("Person with id %d deleted \n", id)))
 }

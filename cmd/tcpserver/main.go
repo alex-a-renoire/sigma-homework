@@ -7,6 +7,7 @@ import (
 
 	"github.com/alex-a-renoire/sigma-homework/pkg/storage/inmemory"
 	"github.com/alex-a-renoire/sigma-homework/pkg/tcpserver"
+	tcpcontroller "github.com/alex-a-renoire/sigma-homework/pkg/tcpserver/controller"
 	"github.com/alex-a-renoire/sigma-homework/pkg/tcpserver/handler"
 	"github.com/alex-a-renoire/sigma-homework/service"
 )
@@ -35,8 +36,11 @@ func main() {
 	//create a service
 	service := service.New(s)
 
+	//create a controller for transport layer
+	controller := tcpcontroller.New(service)
+
 	//create a request handler
-	h := handler.New(service)
+	h := handler.New(controller)
 
 	//create a server
 	srv := tcpserver.New(cfg.TCPAddr, h)

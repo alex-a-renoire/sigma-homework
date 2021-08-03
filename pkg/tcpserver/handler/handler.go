@@ -9,16 +9,16 @@ import (
 	"net"
 
 	"github.com/alex-a-renoire/sigma-homework/model"
-	"github.com/alex-a-renoire/sigma-homework/service"
+	tcpcontroller "github.com/alex-a-renoire/sigma-homework/pkg/tcpserver/controller"
 )
 
 type Handler struct {
-	Service service.PersonService
+	controller tcpcontroller.PersonControllerTCP
 }
 
-func New(s service.PersonService) Handler {
+func New(c tcpcontroller.PersonControllerTCP) Handler {
 	return Handler{
-		Service: s,
+		controller: c,
 	}
 }
 
@@ -60,7 +60,7 @@ func (h *Handler) HandleConnection(conn net.Conn, message chan string, connNumbe
 		log.Printf("Command received: %s", s)
 
 		//Select the correct action and perform it in the database
-		response, err = h.Service.ProcessAction(action)
+		response, err = h.controller.ProcessAction(action)
 		if err != nil {
 			response = fmt.Sprintf("error processing action: %s \n", err)
 			message <- response
