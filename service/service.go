@@ -36,6 +36,9 @@ func New(s ServicePersonStorage) PersonService {
 }
 
 //Controller - storage - map - action
+//https://habr.com/ru/post/529086/
+//https://medium.com/@matryer/golang-advent-calendar-day-five-routing-restful-controllers-edb74e7d4101
+//https://gophersaurus.github.io/docs/v1/controllers/
 
 func (ps PersonService) ProcessAction(action model.Action) (string, error) {
 	var response string

@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/alex-a-renoire/sigma-homework/pkg/httpserver/controllers"
 	httphandler "github.com/alex-a-renoire/sigma-homework/pkg/httpserver/handler"
 	"github.com/alex-a-renoire/sigma-homework/pkg/storage/inmemory"
 	"github.com/alex-a-renoire/sigma-homework/service"
@@ -35,7 +36,9 @@ func main() {
 
 	service := service.New(db)
 
-	sh := httphandler.New(service)
+	controller := controllers.New(service)
+
+	sh := httphandler.New(controller)
 
 	srv := http.Server{
 		Addr:    cfg.HTTPAddr,

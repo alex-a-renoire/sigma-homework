@@ -8,17 +8,17 @@ import (
 	"strconv"
 
 	"github.com/alex-a-renoire/sigma-homework/model"
-	"github.com/alex-a-renoire/sigma-homework/service"
+	"github.com/alex-a-renoire/sigma-homework/pkg/httpserver/controllers"
 	"github.com/gorilla/mux"
 )
 
 type HTTPHandler struct {
-	service service.PersonService
+	PController controllers.PersonController
 }
 
-func New(service service.PersonService) HTTPHandler {
+func New(controller controllers.PersonController) HTTPHandler {
 	return HTTPHandler{
-		service: service,
+		PController: controller,
 	}
 }
 
@@ -74,11 +74,7 @@ func (s *HTTPHandler) AddPerson(w http.ResponseWriter, req *http.Request) {
 	}
 
 	//send the appropriate action to service
-	res, err := s.service.ProcessAction(model.Action{
-		FuncName:   "AddPerson",
-		Parameters: item,
-	},
-	)
+	res, err := s.PController.AddPerson(item)
 	if err != nil {
 		s.reportError(w, err)
 		return
@@ -102,11 +98,7 @@ func (s *HTTPHandler) GetPerson(w http.ResponseWriter, req *http.Request) {
 	}
 
 	//Ask the service to process action
-	res, err := s.service.ProcessAction(model.Action{
-		FuncName:   "GetPerson",
-		Parameters: model.Person{Id: id},
-	},
-	)
+	res, err := s.PController.GetPerson(id)
 	if err != nil {
 		s.reportError(w, err)
 		return
@@ -121,11 +113,7 @@ func (s *HTTPHandler) GetAllPersons(w http.ResponseWriter, req *http.Request) {
 	log.Print("Command GetAllPersons received")
 
 	//Ask the service to process action
-	res, err := s.service.ProcessAction(model.Action{
-		FuncName:   "GetAllPersons",
-		Parameters: model.Person{},
-	},
-	)
+	res, err := s.PController.GetAllPersons()
 	if err != nil {
 		s.reportError(w, err)
 		return
@@ -162,17 +150,10 @@ func (s *HTTPHandler) UpdatePerson(w http.ResponseWriter, req *http.Request) {
 	}
 
 	//add ID to the person object.
-
-	//In fact, Id could also be transferred through json, but common logic tells that
-	//ID of the modified object should be a path variable
 	item.Id = id
 
 	//Ask the service to process action
-	res, err := s.service.ProcessAction(model.Action{
-		FuncName:   "UpdatePerson",
-		Parameters: item,
-	},
-	)
+	res, err := s.PController.UpdatePerson(item)
 	if err != nil {
 		s.reportError(w, err)
 		return
@@ -195,13 +176,7 @@ func (s *HTTPHandler) DeletePerson(w http.ResponseWriter, req *http.Request) {
 	}
 
 	//Ask the service to process action
-	res, err := s.service.ProcessAction(model.Action{
-		FuncName: "DeletePerson",
-		Parameters: model.Person{
-			Id: id,
-		},
-	},
-	)
+	res, err := s.PController.DeletePerson(id)
 	if err != nil {
 		s.reportError(w, err)
 		return
