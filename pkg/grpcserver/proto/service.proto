@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+option go_package = "github.com/alex-a-renoire/sigma-homework/pkg/grpcserver";
+package grpcDatabaseService;
+
+import "google/protobuf/empty.proto";
+
+service StorageService {
+    rpc AddPerson(AddPersonRequest) returns (AddPersonResponse) {}
+    rpc GetPerson(GetPersonRequest) returns (Person) {}
+    rpc GetAllPersons(AllPersonsRequest) returns (AllPersonsResponse) {}
+    rpc UpdatePerson(UpdatePersonRequest) returns (Person) {}
+    rpc DeletePerson(DeletePersonRequest) returns (google.protobuf.Empty) {}
+} 
+
+message AddPersonRequest {
+    string name = 1;
+}
+
+message AddPersonResponse {
+    int32 id = 1;
+}
+
+message GetPersonRequest {
+    int32 id = 1;
+}
+
+message Person {
+    int32 id = 1;
+    string name = 2;
+}
+
+message AllPersonsRequest {
+    string statusMessage = 1;
+}
+
+message AllPersonsResponse {
+    repeated Person allPersons = 1;
+}
+
+message UpdatePersonRequest {
+    int32 id = 1;
+    string name = 2;
+}
+
+message DeletePersonRequest {
+    int32 id = 1;
+}
