@@ -45,6 +45,7 @@ func main() {
 		DB: db,
 	})
 
+	log.Println("GRPC storage server starting...")
 	//start server
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %s", err)

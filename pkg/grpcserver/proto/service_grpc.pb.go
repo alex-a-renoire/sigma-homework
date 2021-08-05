@@ -21,7 +21,7 @@ const _ = grpc.SupportPackageIsVersion7
 type StorageServiceClient interface {
 	AddPerson(ctx context.Context, in *AddPersonRequest, opts ...grpc.CallOption) (*AddPersonResponse, error)
 	GetPerson(ctx context.Context, in *GetPersonRequest, opts ...grpc.CallOption) (*Person, error)
-	GetAllPersons(ctx context.Context, in *AllPersonsRequest, opts ...grpc.CallOption) (*AllPersonsResponse, error)
+	GetAllPersons(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*AllPersonsResponse, error)
 	UpdatePerson(ctx context.Context, in *UpdatePersonRequest, opts ...grpc.CallOption) (*Person, error)
 	DeletePerson(ctx context.Context, in *DeletePersonRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 }
@@ -52,7 +52,7 @@ func (c *storageServiceClient) GetPerson(ctx context.Context, in *GetPersonReque
 	return out, nil
 }
 
-func (c *storageServiceClient) GetAllPersons(ctx context.Context, in *AllPersonsRequest, opts ...grpc.CallOption) (*AllPersonsResponse, error) {
+func (c *storageServiceClient) GetAllPersons(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*AllPersonsResponse, error) {
 	out := new(AllPersonsResponse)
 	err := c.cc.Invoke(ctx, "/grpcDatabaseService.StorageService/GetAllPersons", in, out, opts...)
 	if err != nil {
@@ -85,7 +85,7 @@ func (c *storageServiceClient) DeletePerson(ctx context.Context, in *DeletePerso
 type StorageServiceServer interface {
 	AddPerson(context.Context, *AddPersonRequest) (*AddPersonResponse, error)
 	GetPerson(context.Context, *GetPersonRequest) (*Person, error)
-	GetAllPersons(context.Context, *AllPersonsRequest) (*AllPersonsResponse, error)
+	GetAllPersons(context.Context, *empty.Empty) (*AllPersonsResponse, error)
 	UpdatePerson(context.Context, *UpdatePersonRequest) (*Person, error)
 	DeletePerson(context.Context, *DeletePersonRequest) (*empty.Empty, error)
 	mustEmbedUnimplementedStorageServiceServer()
@@ -101,7 +101,7 @@ func (UnimplementedStorageServiceServer) AddPerson(context.Context, *AddPersonRe
 func (UnimplementedStorageServiceServer) GetPerson(context.Context, *GetPersonRequest) (*Person, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPerson not implemented")
 }
-func (UnimplementedStorageServiceServer) GetAllPersons(context.Context, *AllPersonsRequest) (*AllPersonsResponse, error) {
+func (UnimplementedStorageServiceServer) GetAllPersons(context.Context, *empty.Empty) (*AllPersonsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllPersons not implemented")
 }
 func (UnimplementedStorageServiceServer) UpdatePerson(context.Context, *UpdatePersonRequest) (*Person, error) {
@@ -160,7 +160,7 @@ func _StorageService_GetPerson_Handler(srv interface{}, ctx context.Context, dec
 }
 
 func _StorageService_GetAllPersons_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AllPersonsRequest)
+	in := new(empty.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -172,7 +172,7 @@ func _StorageService_GetAllPersons_Handler(srv interface{}, ctx context.Context,
 		FullMethod: "/grpcDatabaseService.StorageService/GetAllPersons",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(StorageServiceServer).GetAllPersons(ctx, req.(*AllPersonsRequest))
+		return srv.(StorageServiceServer).GetAllPersons(ctx, req.(*empty.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -242,5 +242,5 @@ var StorageService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/service.proto",
+	Metadata: "pkg/grpcserver/proto/service.proto",
 }

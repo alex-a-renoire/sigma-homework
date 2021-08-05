@@ -3,10 +3,11 @@ package grpcserver
 import (
 	"context"
 	"fmt"
+	"log"
 
+	pb "github.com/alex-a-renoire/sigma-homework/pkg/grpcserver/proto"
 	"github.com/alex-a-renoire/sigma-homework/pkg/storage"
 	"google.golang.org/protobuf/types/known/emptypb"
-	pb "github.com/alex-a-renoire/sigma-homework/pkg/grpcserver/proto"
 )
 
 //Declare the GRPC server
@@ -17,6 +18,8 @@ type StorageServer struct {
 }
 
 func (ss *StorageServer) AddPerson(_ context.Context, in *pb.AddPersonRequest) (*pb.AddPersonResponse, error) {
+	log.Println("Add person command received...")
+	
 	id, err := ss.DB.AddPerson(in.Name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to add person: %w", err)
@@ -28,6 +31,7 @@ func (ss *StorageServer) AddPerson(_ context.Context, in *pb.AddPersonRequest) (
 }
 
 func (ss *StorageServer) GetPerson(_ context.Context, in *pb.GetPersonRequest) (*pb.Person, error) {
+	log.Println("Get person command received...")
 	p, err := ss.DB.GetPerson(int(in.Id))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get person: %w", err)
@@ -39,7 +43,8 @@ func (ss *StorageServer) GetPerson(_ context.Context, in *pb.GetPersonRequest) (
 	}, nil
 }
 
-func (ss *StorageServer) GetAllPersons(_ context.Context, in *pb.AllPersonsRequest) (*pb.AllPersonsResponse, error) {
+func (ss *StorageServer) GetAllPersons(_ context.Context, in *emptypb.Empty) (*pb.AllPersonsResponse, error) {
+	log.Println("Get all persons command received...")
 	persons, err := ss.DB.GetAllPersons()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get the list of persons: %w", err)
@@ -60,6 +65,7 @@ func (ss *StorageServer) GetAllPersons(_ context.Context, in *pb.AllPersonsReque
 }
 
 func (ss *StorageServer) UpdatePerson(_ context.Context, in *pb.UpdatePersonRequest) (*pb.Person, error) {
+	log.Println("Update person command received...")
 	p, err := ss.DB.UpdatePerson(int(in.Id), in.Name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update person: %w", err)
@@ -72,6 +78,7 @@ func (ss *StorageServer) UpdatePerson(_ context.Context, in *pb.UpdatePersonRequ
 }
 
 func (ss *StorageServer) DeletePerson(_ context.Context, in *pb.DeletePersonRequest) (*emptypb.Empty, error) {
+	log.Println("Delete person command received...")
 	if err := ss.DB.DeletePerson(int(in.Id)); err != nil {
 		return &emptypb.Empty{}, fmt.Errorf("failed to delete person: %w", err)
 	}
