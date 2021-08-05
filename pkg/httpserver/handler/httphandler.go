@@ -32,6 +32,8 @@ func (s *HTTPHandler) GetRouter() *mux.Router {
 	router.HandleFunc("/persons/{id}", s.UpdatePerson).Methods("PATCH")
 	router.HandleFunc("/persons/{id}", s.DeletePerson).Methods("DELETE")
 
+	router.Use(s.loggingMiddleware)
+
 	return router
 }
 
@@ -182,4 +184,11 @@ func (s *HTTPHandler) DeletePerson(w http.ResponseWriter, req *http.Request) {
 	//write the data to response
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(fmt.Sprintf("Person with id %d deleted \n", id)))
+}
+
+func (s *HTTPHandler) loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println("Request received...")
+		next.ServeHTTP(w, r)
+	})
 }
