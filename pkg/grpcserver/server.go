@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/alex-a-renoire/sigma-homework/model"
 	pb "github.com/alex-a-renoire/sigma-homework/pkg/grpcserver/proto"
 	"github.com/alex-a-renoire/sigma-homework/pkg/storage"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -19,8 +20,11 @@ type StorageServer struct {
 
 func (ss *StorageServer) AddPerson(_ context.Context, in *pb.AddPersonRequest) (*pb.AddPersonResponse, error) {
 	log.Println("Add person command received...")
-	
-	id, err := ss.DB.AddPerson(in.Name)
+	p := model.Person{
+		Name: in.Name,
+	}
+
+	id, err := ss.DB.AddPerson(p)
 	if err != nil {
 		return nil, fmt.Errorf("failed to add person: %w", err)
 	}
@@ -65,8 +69,12 @@ func (ss *StorageServer) GetAllPersons(_ context.Context, in *emptypb.Empty) (*p
 }
 
 func (ss *StorageServer) UpdatePerson(_ context.Context, in *pb.UpdatePersonRequest) (*pb.Person, error) {
+	person := model.Person{
+		Name: in.Name,
+	}
+
 	log.Println("Update person command received...")
-	p, err := ss.DB.UpdatePerson(int(in.Id), in.Name)
+	p, err := ss.DB.UpdatePerson(int(in.Id), person)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update person: %w", err)
 	}

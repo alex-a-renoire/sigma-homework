@@ -20,12 +20,8 @@ func New() *PersonStorage {
 	return &s
 }
 
-func (s *PersonStorage) AddPerson(name string) (int, error) {
-	p := model.Person{
-		Id:   s.LastId,
-		Name: name,
-	}
-
+func (s *PersonStorage) AddPerson(p model.Person) (int, error) {
+	p.Id = s.LastId
 	s.mu.Lock()
 	s.MapPerson[s.LastId] = p
 	s.LastId = s.LastId + 1
@@ -56,16 +52,14 @@ func (s *PersonStorage) GetAllPersons() ([]model.Person, error) {
 	return persons, nil
 }
 
-func (s *PersonStorage) UpdatePerson(id int, name string) (model.Person, error) {
+func (s *PersonStorage) UpdatePerson(id int, p model.Person) (model.Person, error) {
 	s.mu.Lock()
 	if _, ok := s.MapPerson[id]; !ok {
 		return model.Person{}, fmt.Errorf("person with id %d not found", id)
 	}
 
-	s.MapPerson[id] = model.Person{
-		Id:   id,
-		Name: name,
-	}
+	p.Id = id
+	s.MapPerson[id] = p
 	s.mu.Unlock()
 	return s.MapPerson[id], nil
 }

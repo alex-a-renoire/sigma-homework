@@ -15,7 +15,9 @@ func New(db PersonStorage) DierctPersonService {
 }
 
 func (s DierctPersonService) AddPerson(name string) (int, error) {
-	return s.db.AddPerson(name)
+	return s.db.AddPerson(model.Person{
+		Name: name,
+	})
 }
 
 func (s DierctPersonService) GetPerson(id int) (model.Person, error) {
@@ -27,7 +29,9 @@ func (s DierctPersonService) GetAllPersons() ([]model.Person, error) {
 }
 
 func (s DierctPersonService) UpdatePerson(id int, name string) (model.Person, error) {
-	return s.db.UpdatePerson(id, name)
+	return s.db.UpdatePerson(id, model.Person{
+		Name: name,
+	})
 }
 
 func (s DierctPersonService) DeletePerson(id int) error {
