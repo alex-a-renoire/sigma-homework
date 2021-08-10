@@ -8,11 +8,11 @@ import (
 )
 
 type PersonControllerTCP struct {
-	s           service.PersonService
+	s           service.DierctPersonService
 	FunctionMap map[string]interface{}
 }
 
-func New(s service.PersonService) PersonControllerTCP {
+func New(s service.DierctPersonService) PersonControllerTCP {
 	m := map[string]interface{}{
 		"AddPerson":     s.AddPerson,
 		"GetPerson":     s.GetPerson,

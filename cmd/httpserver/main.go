@@ -8,34 +8,49 @@ import (
 	"os/signal"
 	"syscall"
 
+	pb "github.com/alex-a-renoire/sigma-homework/pkg/grpcserver/proto"
+	"google.golang.org/grpc"
+
 	httphandler "github.com/alex-a-renoire/sigma-homework/pkg/httpserver/handler"
-	"github.com/alex-a-renoire/sigma-homework/pkg/storage/inmemory"
 	"github.com/alex-a-renoire/sigma-homework/service"
 )
 
 type config struct {
 	HTTPAddr string
+	GRPCAddr string
 }
 
 func getCfg() config {
-	HTTPAddr := os.Getenv("HTTP_ADDR")
+	HTTPAddr := os.Getenv("HTTP_LISTEN_ADDRESS")
 	if HTTPAddr == "" {
 		HTTPAddr = ":8081"
 	}
 
+	GRPCAddr := os.Getenv("HTTP_GRPC_ADDRESS")
+	if GRPCAddr == "" {
+		GRPCAddr = ":50051"
+	}
+
 	return config{
 		HTTPAddr: HTTPAddr,
+		GRPCAddr: GRPCAddr,
 	}
 }
 
 func main() {
 	cfg := getCfg()
 
-	//create storage
-	db := inmemory.New()
+	//create storage service
+	conn, err := grpc.Dial(cfg.GRPCAddr, grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("did not connect: %v", err)
+	}
+	defer conn.Close()
+
+	storageClient := pb.NewStorageServiceClient(conn)
 
 	//create service with storage
-	service := service.New(db)
+	service := service.NewGRPC(storageClient)
 
 	//create handler with controller
 	sh := httphandler.New(service)

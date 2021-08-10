@@ -12,8 +12,8 @@ type MockStorage struct {
 	MockDeletePerson  func(id int) error
 }
 
-func (m MockStorage) AddPerson(name string) (int, error) {
-	return m.MockAddPerson(name)
+func (m MockStorage) AddPerson(p model.Person) (int, error) {
+	return m.MockAddPerson(p.Name)
 }
 
 func (m MockStorage) GetPerson(id int) (model.Person, error) {
@@ -24,8 +24,8 @@ func (m MockStorage) GetAllPersons() ([]model.Person, error) {
 	return m.MockGetAllPersons()
 }
 
-func (m MockStorage) UpdatePerson(id int, name string) (model.Person, error) {
-	return m.MockUpdatePerson(id, name)
+func (m MockStorage) UpdatePerson(id int, p model.Person) (model.Person, error) {
+	return m.MockUpdatePerson(id, p.Name)
 }
 
 func (m MockStorage) DeletePerson(id int) error {
