@@ -21,12 +21,12 @@ type config struct {
 }
 
 func getCfg() config {
-	HTTPAddr := os.Getenv("HTTP_ADDR")
+	HTTPAddr := os.Getenv("HTTP_LISTEN_ADDRESS")
 	if HTTPAddr == "" {
 		HTTPAddr = ":8081"
 	}
 
-	GRPCAddr := os.Getenv("GRPC_ADDR")
+	GRPCAddr := os.Getenv("HTTP_GRPC_ADDRESS")
 	if GRPCAddr == "" {
 		GRPCAddr = ":50051"
 	}

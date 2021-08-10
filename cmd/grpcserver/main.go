@@ -7,27 +7,34 @@ import (
 
 	"github.com/alex-a-renoire/sigma-homework/pkg/grpcserver"
 	pb "github.com/alex-a-renoire/sigma-homework/pkg/grpcserver/proto"
-	"github.com/alex-a-renoire/sigma-homework/pkg/storage/inmemory"
+	"github.com/alex-a-renoire/sigma-homework/pkg/storage/pgstorage"
 	"google.golang.org/grpc"
 )
 
 type config struct {
-	TCPport string
+	TCPport   string
+	PGAddress string
 }
 
 func getOsVars() *config {
-	tcpPort := os.Getenv("POSTAL_LISTEN_ADDRESS")
+	tcpPort := os.Getenv("GRPC_LISTEN_ADDRESS")
 	if tcpPort == "" {
 		tcpPort = ":50051"
 	}
 
+	pgAddress := os.Getenv("PG_ADDRESS")
+	if pgAddress == "" {
+		pgAddress = "host=db port=5432 dbname=persons user=persons password=pass sslmode=disable"
+	}
+
 	return &config{
-		TCPport: tcpPort,
+		TCPport:   tcpPort,
+		PGAddress: pgAddress,
 	}
 }
 
 func main() {
-	//Get configs for it
+	//Get configs
 	cfg := getOsVars()
 
 	//start listening on tcp
@@ -37,7 +44,11 @@ func main() {
 	}
 
 	//create storage
-	db := inmemory.New()
+	db, err := pgstorage.New(cfg.PGAddress)
+	if err != nil {
+		log.Printf("failed to connect to db: %s", err)
+		return
+	}
 
 	//create GRPC server
 	s := grpc.NewServer()
