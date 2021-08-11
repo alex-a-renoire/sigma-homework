@@ -2,7 +2,6 @@ package httphandler
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -83,10 +82,18 @@ func (s *HTTPHandler) AddPerson(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	//Marshal person to json
+	person.Id = id
+	p, err = json.Marshal(person)
+	if err != nil {
+		s.reportError(w, err)
+		return
+	}
+
 	//write the data to response
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(fmt.Sprintf("Person with id %d and name %s added \n", id, person.Name)))
+	w.Write(p)
 }
 
 func (s *HTTPHandler) GetPerson(w http.ResponseWriter, req *http.Request) {
@@ -107,9 +114,17 @@ func (s *HTTPHandler) GetPerson(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	//Marshal person
+	p, err := json.Marshal(person)
+	if err != nil {
+		s.reportError(w, err)
+		return
+	}
+
 	//write the data to response
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(fmt.Sprintf("Person with id %d has name %s \n", person.Id, person.Name)))
+	w.WriteHeader(http.StatusFound)
+	w.Write(p)
 }
 
 func (s *HTTPHandler) GetAllPersons(w http.ResponseWriter, req *http.Request) {
@@ -122,9 +137,16 @@ func (s *HTTPHandler) GetAllPersons(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	//Marshal persons
+	ps, err := json.Marshal(persons)
+	if err != nil {
+		s.reportError(w, err)
+		return
+	}
+
 	//write the data to response
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(fmt.Sprintf("All persons in the storage are %v \n", persons)))
+	w.Write(ps)
 }
 
 func (s *HTTPHandler) UpdatePerson(w http.ResponseWriter, req *http.Request) {
@@ -159,9 +181,16 @@ func (s *HTTPHandler) UpdatePerson(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	//Marshal updated person
+	p, err = json.Marshal(updatedPerson)
+	if err != nil {
+		s.reportError(w, err)
+		return
+	}
+
 	//write the data to response
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(fmt.Sprintf("Person with id %d updated with name %s \n", updatedPerson.Id, updatedPerson.Name)))
+	w.Write(p)
 }
 
 func (s *HTTPHandler) DeletePerson(w http.ResponseWriter, req *http.Request) {
@@ -183,7 +212,7 @@ func (s *HTTPHandler) DeletePerson(w http.ResponseWriter, req *http.Request) {
 
 	//write the data to response
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(fmt.Sprintf("Person with id %d deleted \n", id)))
+	w.WriteHeader(http.StatusOK)
 }
 
 func (s *HTTPHandler) loggingMiddleware(next http.Handler) http.Handler {
