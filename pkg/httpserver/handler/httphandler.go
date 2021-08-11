@@ -10,6 +10,7 @@ import (
 	"github.com/alex-a-renoire/sigma-homework/model"
 	"github.com/alex-a-renoire/sigma-homework/service"
 	"github.com/gorilla/mux"
+	"github.com/jszwec/csvutil"
 )
 
 type HTTPHandler struct {
@@ -27,10 +28,10 @@ func (s *HTTPHandler) GetRouter() *mux.Router {
 
 	router.HandleFunc("/persons", s.AddPerson).Methods("POST")
 	router.HandleFunc("/persons", s.GetAllPersons).Methods("GET")
+	router.HandleFunc("/persons/dump", s.CreatePersonsCSV).Methods("GET")
 	router.HandleFunc("/persons/{id}", s.GetPerson).Methods("GET")
 	router.HandleFunc("/persons/{id}", s.UpdatePerson).Methods("PATCH")
 	router.HandleFunc("/persons/{id}", s.DeletePerson).Methods("DELETE")
-
 	router.Use(s.loggingMiddleware)
 
 	return router
@@ -213,6 +214,30 @@ func (s *HTTPHandler) DeletePerson(w http.ResponseWriter, req *http.Request) {
 	//write the data to response
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+}
+
+func (s *HTTPHandler) CreatePersonsCSV(w http.ResponseWriter, req *http.Request) {
+	log.Print("Command CreatePersonsCSV received")
+
+	//Ask the service to process action
+	persons, err := s.service.GetAllPersons()
+	if err != nil {
+		s.reportError(w, err)
+		return
+	}
+
+	//Marshal persons into csv
+	ps, err := csvutil.Marshal(persons)
+	if err != nil {
+		s.reportError(w, err)
+		return
+	}
+
+	//write the data to response
+	log.Print("Transmitting file to client...")
+	w.Header().Set("Content-Type", "text/csv")
+	w.Header().Set("Content-Disposition", "attachment; filename=myfilename.csv")
+	w.Write(ps)
 }
 
 func (s *HTTPHandler) loggingMiddleware(next http.Handler) http.Handler {
