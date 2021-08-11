@@ -1,11 +1,14 @@
 package httphandler
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"path/filepath"
 	"strconv"
+	"text/template"
 
 	"github.com/alex-a-renoire/sigma-homework/model"
 	"github.com/alex-a-renoire/sigma-homework/service"
@@ -28,10 +31,13 @@ func (s *HTTPHandler) GetRouter() *mux.Router {
 
 	router.HandleFunc("/persons", s.AddPerson).Methods("POST")
 	router.HandleFunc("/persons", s.GetAllPersons).Methods("GET")
-	router.HandleFunc("/persons/dump", s.CreatePersonsCSV).Methods("GET")
+	router.HandleFunc("/persons/dump", s.DownloadPersonsCSV).Methods("GET")
+	router.HandleFunc("/persons/upload", s.RenderTemplate).Methods("GET")
+	router.HandleFunc("/persons/upload", s.UploadPersonsCSV).Methods("POST")
 	router.HandleFunc("/persons/{id}", s.GetPerson).Methods("GET")
 	router.HandleFunc("/persons/{id}", s.UpdatePerson).Methods("PATCH")
 	router.HandleFunc("/persons/{id}", s.DeletePerson).Methods("DELETE")
+
 	router.Use(s.loggingMiddleware)
 
 	return router
@@ -216,8 +222,12 @@ func (s *HTTPHandler) DeletePerson(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (s *HTTPHandler) CreatePersonsCSV(w http.ResponseWriter, req *http.Request) {
-	log.Print("Command CreatePersonsCSV received")
+///////
+//CSV//
+///////
+
+func (s *HTTPHandler) DownloadPersonsCSV(w http.ResponseWriter, req *http.Request) {
+	log.Print("Command DownloadPersonsCSV received")
 
 	//Ask the service to process action
 	persons, err := s.service.GetAllPersons()
@@ -239,6 +249,55 @@ func (s *HTTPHandler) CreatePersonsCSV(w http.ResponseWriter, req *http.Request)
 	w.Header().Set("Content-Disposition", "attachment; filename=myfilename.csv")
 	w.Write(ps)
 }
+
+func (s *HTTPHandler) RenderTemplate(w http.ResponseWriter, req *http.Request) {
+	tmp, err := template.ParseFiles(filepath.Join("/templates", "upload.html"))
+	if err != nil {
+		s.reportError(w, err)
+		return
+	}
+
+	tmp.Execute(w, struct{}{})
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+}
+
+func (s *HTTPHandler) UploadPersonsCSV(w http.ResponseWriter, req *http.Request) {
+	file, _, err := req.FormFile("uploadfile")
+	if err != nil {
+		s.reportError(w, err)
+		return
+	}
+
+	lines, err := csv.NewReader(file).ReadAll()
+	persons := []model.Person{}
+
+	for _, line := range lines[1:] {
+		id, err := strconv.Atoi(line[0])
+		if err != nil {
+			s.reportError(w, err)
+			return
+		}
+		p := model.Person{
+			Id:   id,
+			Name: line[1],
+		}
+
+		persons = append(persons, p)
+	}
+
+	ps, err := json.Marshal(persons)
+	if err != nil {
+		s.reportError(w, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(ps)
+}
+
+//////////////
+//Middleware//
+//////////////
 
 func (s *HTTPHandler) loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
