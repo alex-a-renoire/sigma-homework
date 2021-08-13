@@ -3,6 +3,7 @@ package httphandler
 import (
 	"encoding/csv"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -130,6 +131,7 @@ func (s *HTTPHandler) GetPerson(w http.ResponseWriter, req *http.Request) {
 
 	//write the data to response
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Location", fmt.Sprintf("persons/%d", id))
 	w.WriteHeader(http.StatusFound)
 	w.Write(p)
 }
