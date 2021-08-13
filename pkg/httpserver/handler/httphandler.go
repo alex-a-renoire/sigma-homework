@@ -44,12 +44,17 @@ func (s *HTTPHandler) GetRouter() *mux.Router {
 	return router
 }
 
+var (
+	BadRequestErr     = 1
+	InternalServerErr = 2
+)
+
 type Error struct {
 	Message string `json:"message"`
 }
 
 // TODO разобраться со статусами еггогов
-func (s *HTTPHandler) reportError(w http.ResponseWriter, err error) {
+func (s *HTTPHandler) reportError(w http.ResponseWriter, err error, errType int) {
 	httperr := Error{
 		Message: err.Error(),
 	}
@@ -62,7 +67,11 @@ func (s *HTTPHandler) reportError(w http.ResponseWriter, err error) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusBadRequest) // TODO handle different errors differently
+	if errType == BadRequestErr {
+		w.WriteHeader(http.StatusBadRequest)
+	} else {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 	w.Write(data)
 }
 
@@ -72,21 +81,21 @@ func (s *HTTPHandler) AddPerson(w http.ResponseWriter, req *http.Request) {
 	//read new person in json format from the request body
 	p, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		s.reportError(w, err)
+		s.reportError(w, err, BadRequestErr)
 		return
 	}
 
 	//Unmarshal person
 	person := model.Person{}
 	if err = json.Unmarshal(p, &person); err != nil {
-		s.reportError(w, err)
+		s.reportError(w, err, BadRequestErr)
 		return
 	}
 
 	//send the appropriate action to service
 	id, err := s.service.AddPerson(person.Name)
 	if err != nil {
-		s.reportError(w, err)
+		s.reportError(w, err, InternalServerErr)
 		return
 	}
 
@@ -94,12 +103,13 @@ func (s *HTTPHandler) AddPerson(w http.ResponseWriter, req *http.Request) {
 	person.Id = id
 	p, err = json.Marshal(person)
 	if err != nil {
-		s.reportError(w, err)
+		s.reportError(w, err, InternalServerErr)
 		return
 	}
 
 	//write the data to response
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Location", fmt.Sprintf("/persons/%d", id))
 	w.WriteHeader(http.StatusCreated)
 	w.Write(p)
 }
@@ -111,28 +121,27 @@ func (s *HTTPHandler) GetPerson(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		s.reportError(w, err)
+		s.reportError(w, err, BadRequestErr)
 		return
 	}
 
 	//Ask the service to process action
 	person, err := s.service.GetPerson(id)
 	if err != nil {
-		s.reportError(w, err)
+		s.reportError(w, err, InternalServerErr)
 		return
 	}
 
 	//Marshal person
 	p, err := json.Marshal(person)
 	if err != nil {
-		s.reportError(w, err)
+		s.reportError(w, err, InternalServerErr)
 		return
 	}
 
 	//write the data to response
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Location", fmt.Sprintf("persons/%d", id))
-	w.WriteHeader(http.StatusFound)
+	w.WriteHeader(http.StatusOK)
 	w.Write(p)
 }
 
@@ -142,14 +151,14 @@ func (s *HTTPHandler) GetAllPersons(w http.ResponseWriter, req *http.Request) {
 	//Ask the service to process action
 	persons, err := s.service.GetAllPersons()
 	if err != nil {
-		s.reportError(w, err)
+		s.reportError(w, err, InternalServerErr)
 		return
 	}
 
 	//Marshal persons
 	ps, err := json.Marshal(persons)
 	if err != nil {
-		s.reportError(w, err)
+		s.reportError(w, err, InternalServerErr)
 		return
 	}
 
@@ -165,35 +174,35 @@ func (s *HTTPHandler) UpdatePerson(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		s.reportError(w, err)
+		s.reportError(w, err, BadRequestErr)
 		return
 	}
 
 	//Get the new person name from the json in the req body
 	p, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		s.reportError(w, err)
+		s.reportError(w, err, BadRequestErr)
 		return
 	}
 
 	//unmarshal person
 	person := model.Person{}
 	if err = json.Unmarshal(p, &person); err != nil {
-		s.reportError(w, err)
+		s.reportError(w, err, BadRequestErr)
 		return
 	}
 
 	//Ask the service to process action
 	updatedPerson, err := s.service.UpdatePerson(id, person.Name)
 	if err != nil {
-		s.reportError(w, err)
+		s.reportError(w, err, InternalServerErr)
 		return
 	}
 
 	//Marshal updated person
 	p, err = json.Marshal(updatedPerson)
 	if err != nil {
-		s.reportError(w, err)
+		s.reportError(w, err, InternalServerErr)
 		return
 	}
 
@@ -209,13 +218,13 @@ func (s *HTTPHandler) DeletePerson(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		s.reportError(w, err)
+		s.reportError(w, err, BadRequestErr)
 		return
 	}
 
 	//Ask the service to process action
 	if err := s.service.DeletePerson(id); err != nil {
-		s.reportError(w, err)
+		s.reportError(w, err, InternalServerErr)
 		return
 	}
 
@@ -234,14 +243,14 @@ func (s *HTTPHandler) DownloadPersonsCSV(w http.ResponseWriter, req *http.Reques
 	//Ask the service to process action
 	persons, err := s.service.GetAllPersons()
 	if err != nil {
-		s.reportError(w, err)
+		s.reportError(w, err, InternalServerErr)
 		return
 	}
 
 	//Marshal persons into csv
 	ps, err := csvutil.Marshal(persons)
 	if err != nil {
-		s.reportError(w, err)
+		s.reportError(w, err, InternalServerErr)
 		return
 	}
 
@@ -255,7 +264,7 @@ func (s *HTTPHandler) DownloadPersonsCSV(w http.ResponseWriter, req *http.Reques
 func (s *HTTPHandler) RenderTemplate(w http.ResponseWriter, req *http.Request) {
 	tmp, err := template.ParseFiles(filepath.Join("/templates", "upload.html"))
 	if err != nil {
-		s.reportError(w, err)
+		s.reportError(w, err, BadRequestErr)
 		return
 	}
 
@@ -267,7 +276,7 @@ func (s *HTTPHandler) RenderTemplate(w http.ResponseWriter, req *http.Request) {
 func (s *HTTPHandler) UploadPersonsCSV(w http.ResponseWriter, req *http.Request) {
 	file, _, err := req.FormFile("uploadfile")
 	if err != nil {
-		s.reportError(w, err)
+		s.reportError(w, err, BadRequestErr)
 		return
 	}
 
@@ -277,7 +286,7 @@ func (s *HTTPHandler) UploadPersonsCSV(w http.ResponseWriter, req *http.Request)
 	for _, line := range lines[1:] {
 		id, err := strconv.Atoi(line[0])
 		if err != nil {
-			s.reportError(w, err)
+			s.reportError(w, err, BadRequestErr)
 			return
 		}
 		p := model.Person{
@@ -290,7 +299,7 @@ func (s *HTTPHandler) UploadPersonsCSV(w http.ResponseWriter, req *http.Request)
 
 	ps, err := json.Marshal(persons)
 	if err != nil {
-		s.reportError(w, err)
+		s.reportError(w, err, InternalServerErr)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")

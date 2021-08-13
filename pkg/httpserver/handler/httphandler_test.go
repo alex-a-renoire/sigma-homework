@@ -3,6 +3,7 @@ package httphandler
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -22,11 +23,11 @@ func TestHttpHandler(t *testing.T) {
 		method string
 		header string
 		body   []byte
-		//context string
 	}
 
 	type resp struct {
 		code int
+		body string
 	}
 
 	tests := []struct {
@@ -65,14 +66,24 @@ func TestHttpHandler(t *testing.T) {
 				method: "POST",
 				body:   []byte(`{"blahblah":"John"}`),
 			},
-			want: resp{code: http.StatusBadRequest},
+			want: resp{
+				code: http.StatusBadRequest,
+				body: "{\"message\":\"failed to add person to db\"}",
+			},
 		},
 		{
 			name: "GET all /persons",
 			fields: fields{
 				s: storage.MockStorage{
 					MockGetAllPersons: func() ([]model.Person, error) {
-						return []model.Person{}, nil
+						return []model.Person{{
+							Id:   1,
+							Name: "John",
+						}, {
+							Id:   2,
+							Name: "Jane",
+						},
+						}, nil
 					},
 				},
 			},
@@ -80,14 +91,20 @@ func TestHttpHandler(t *testing.T) {
 				url:    "/persons",
 				method: "GET",
 			},
-			want: resp{code: http.StatusOK},
+			want: resp{
+				code: http.StatusOK,
+				body: "[{\"id\":1,\"name\":\"John\"},{\"id\":2,\"name\":\"Jane\"}]",
+			},
 		},
 		{
 			name: "Get /persons/1",
 			fields: fields{
 				s: storage.MockStorage{
 					MockGetPerson: func(_ int) (model.Person, error) {
-						return model.Person{}, nil
+						return model.Person{
+							Id:   1,
+							Name: "John",
+						}, nil
 					},
 				},
 			},
@@ -95,7 +112,66 @@ func TestHttpHandler(t *testing.T) {
 				url:    "/persons/1",
 				method: "GET",
 			},
-			want: resp{code: http.StatusFound},
+			want: resp{
+				code: http.StatusOK,
+				body: "{\"id\":1,\"name\":\"John\"}",
+			},
+		},
+		{
+			name: "UPDATE /persons/1 OK",
+			fields: fields{
+				s: storage.MockStorage{
+					MockUpdatePerson: func(_ int, _ string) (model.Person, error) {
+						return model.Person{
+							Id:   1,
+							Name: "Jane",
+						}, nil
+					},
+				},
+			},
+			args: args{
+				url:    "/persons/1",
+				method: "PATCH",
+			},
+			want: resp{
+				code: http.StatusOK,
+				body: "{\"id\":1,\"name\":\"Jane\"}",
+			},
+		},
+		{
+			name: "DELETE /persons/1 OK",
+			fields: fields{
+				s: storage.MockStorage{
+					MockDeletePerson: func(_ int) error {
+						return nil
+					},
+				},
+			},
+			args: args{
+				url:    "/persons/1",
+				method: "DELETE",
+			},
+			want: resp{
+				code: http.StatusOK,
+			},
+		},
+		{
+			name: "DELETE /persons/1 !OK",
+			fields: fields{
+				s: storage.MockStorage{
+					MockDeletePerson: func(_ int) error {
+						return fmt.Errorf("failed to delete")
+					},
+				},
+			},
+			args: args{
+				url:    "/persons/1",
+				method: "DELETE",
+			},
+			want: resp{
+				code: http.StatusInternalServerError,
+				body: "{\"message\":\"failed to delete\"}",
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -114,9 +190,14 @@ func TestHttpHandler(t *testing.T) {
 
 			r, err := cl.Do(req)
 
-			if err != nil || r.StatusCode != tt.want.code {
+			data, _ := ioutil.ReadAll(r.Body)
+			respBody := string(data)
+
+			if err != nil || r.StatusCode != tt.want.code || (tt.want.body != "" && respBody != tt.want.body) {
 				if err != nil {
 					t.Errorf("error: %s", err)
+				} else if respBody != tt.want.body {
+					t.Errorf("%s %s = %v, want %v", tt.args.method, tt.args.url, respBody, tt.want.body)
 				} else {
 					t.Errorf("%s %s = %v, want %v", tt.args.method, tt.args.url, r.StatusCode, tt.want.code)
 				}
