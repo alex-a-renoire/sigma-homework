@@ -1,8 +1,10 @@
 package httphandler
 
 import (
+	"database/sql"
 	"encoding/csv"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -274,12 +276,14 @@ func (s *HTTPHandler) RenderTemplate(w http.ResponseWriter, req *http.Request) {
 }
 
 func (s *HTTPHandler) UploadPersonsCSV(w http.ResponseWriter, req *http.Request) {
+	//Read a file from the form
 	file, _, err := req.FormFile("uploadfile")
 	if err != nil {
 		s.reportError(w, err, BadRequestErr)
 		return
 	}
 
+	//Parse CSV
 	lines, err := csv.NewReader(file).ReadAll()
 	persons := []model.Person{}
 
@@ -292,6 +296,24 @@ func (s *HTTPHandler) UploadPersonsCSV(w http.ResponseWriter, req *http.Request)
 		p := model.Person{
 			Id:   id,
 			Name: line[1],
+		}
+
+		//If person is not in db, add it with a new id,
+		_, err = s.service.GetPerson(p.Id)
+
+		if errors.Is(err, sql.ErrNoRows) {
+			_, err := s.service.AddPerson(p.Name)
+			if err != nil {
+				s.reportError(w, err, InternalServerErr)
+				return
+			}
+			// otherwise update it with an old id
+		} else {
+			_, err := s.service.UpdatePerson(p.Id, p.Name)
+			if err != nil {
+				s.reportError(w, err, InternalServerErr)
+				return
+			}
 		}
 
 		persons = append(persons, p)
