@@ -1,10 +1,8 @@
 package httphandler
 
 import (
-	"database/sql"
 	"encoding/csv"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -301,13 +299,9 @@ func (s *HTTPHandler) UploadPersonsCSV(w http.ResponseWriter, req *http.Request)
 		//If person is not in db, add it with a new id,
 		_, err = s.service.GetPerson(p.Id)
 
-		if errors.Is(err, sql.ErrNoRows) {
-			_, err := s.service.AddPerson(p.Name)
-			if err != nil {
-				s.reportError(w, err, InternalServerErr)
-				return
-			}
-			// otherwise update it with an old id
+		//TOSO: if errors.Is(err, sql.ErrNoRows) add person. So far we assume any error as IsNil
+		if err != nil {
+			_, err = s.service.AddPerson(p.Name)
 		} else {
 			_, err := s.service.UpdatePerson(p.Id, p.Name)
 			if err != nil {
