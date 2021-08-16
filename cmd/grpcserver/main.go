@@ -29,12 +29,6 @@ func getOsVars() *config {
 		tcpPort = ":50051"
 	}
 
-	//possible values: postgres, redis, mongo
-	DBType := os.Getenv("DB_TYPE")
-	if DBType == "" {
-		DBType = "postgres"
-	}
-
 	pgAddress := os.Getenv("PG_ADDRESS")
 	if pgAddress == "" {
 		pgAddress = "host=db port=5432 dbname=persons user=persons password=pass sslmode=disable"
@@ -59,6 +53,12 @@ func getOsVars() *config {
 		}
 	}
 
+	//possible values: postgres, redis, mongo
+	DBType := os.Getenv("DB_TYPE")
+	if DBType == "" {
+		DBType = "postgres"
+	}
+
 	return &config{
 		TCPport:       tcpPort,
 		DBType:        DBType,
@@ -79,9 +79,10 @@ func main() {
 		log.Fatalf("failed to listen: %s", err)
 	}
 
+	log.Print(cfg.DBType)
 	//create storage
 	var db storage.Storage
-	switch dbtype := cfg.DBType; dbtype {
+	switch cfg.DBType {
 	case "postgres":
 		db, err = pgstorage.New(cfg.PGAddress)
 		if err != nil {
@@ -90,13 +91,13 @@ func main() {
 		}
 	case "redis":
 		db = redisstorage.NewRDS(cfg.RedisAddress, cfg.RedisPassword, cfg.RedisDb)
+		log.Print("redis")
+		log.Print(db)
 	}
 
 	//create GRPC server
 	s := grpc.NewServer()
-	pb.RegisterStorageServiceServer(s, &grpcserver.StorageServer{
-		DB: db,
-	})
+	pb.RegisterStorageServiceServer(s, grpcserver.NewGRPC(db))
 
 	log.Println("GRPC storage server starting...")
 	//start server

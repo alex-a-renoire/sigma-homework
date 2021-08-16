@@ -18,6 +18,12 @@ type StorageServer struct {
 	DB storage.Storage
 }
 
+func NewGRPC(db storage.Storage) *StorageServer {
+	return &StorageServer{
+		DB: db,
+	}
+}
+
 func (ss *StorageServer) AddPerson(_ context.Context, in *pb.AddPersonRequest) (*pb.AddPersonResponse, error) {
 	log.Println("Add person command received...")
 	p := model.Person{
