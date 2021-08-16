@@ -3,8 +3,8 @@ package model
 import "fmt"
 
 type Person struct {
-	Id   int    `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
+	Id   int    `json:"id,omitempty" csv:"id, omitempty"`
+	Name string `json:"name,omitempty" csv:"name"`
 }
 
 func (p *Person) String() string {

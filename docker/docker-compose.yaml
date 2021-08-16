@@ -20,6 +20,8 @@ services:
     environment: 
       - HTTP_LISTEN_ADDRESS
       - HTTP_GRPC_ADDRESS
+    volumes:
+      - ./templates:/templates
 
   grpcserver:
     build:

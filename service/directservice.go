@@ -8,7 +8,7 @@ type DierctPersonService struct {
 	db PersonStorage
 }
 
-func New(db PersonStorage) DierctPersonService {
+func NewDirect(db PersonStorage) DierctPersonService {
 	return DierctPersonService{
 		db: db,
 	}

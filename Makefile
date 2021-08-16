@@ -1,3 +1,7 @@
+.PHONY: all
+all: 
+	cd docker; docker-compose build && docker-compose up
+
 .PHONY: tcpserver 
 tcpserver:
 	export TCP_ADDR=127.0.0.1:8080
@@ -16,4 +20,6 @@ httpserver:
 
 .PHONY: test 
 test:
-	go test ./service
+	go test -v ./pkg/httpserver/handler
+
+
