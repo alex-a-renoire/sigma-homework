@@ -14,10 +14,14 @@ type RDSdb struct {
 	Client          *redis.Client
 }
 
-func NewRDS(client *redis.Client) *RDSdb {
+func NewRDS(addr string, pwd string, dbname int) *RDSdb {
 	return &RDSdb{
 		currentPersonId: 0,
-		Client:          client,
+		Client: redis.NewClient(&redis.Options{
+			Addr:     addr,
+			Password: pwd,
+			DB:       dbname,
+		}),
 	}
 }
 

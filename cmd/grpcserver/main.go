@@ -4,16 +4,23 @@ import (
 	"log"
 	"net"
 	"os"
+	"strconv"
 
 	"github.com/alex-a-renoire/sigma-homework/pkg/grpcserver"
 	pb "github.com/alex-a-renoire/sigma-homework/pkg/grpcserver/proto"
+	"github.com/alex-a-renoire/sigma-homework/pkg/storage"
 	"github.com/alex-a-renoire/sigma-homework/pkg/storage/pgstorage"
+	"github.com/alex-a-renoire/sigma-homework/pkg/storage/redisstorage"
 	"google.golang.org/grpc"
 )
 
 type config struct {
-	TCPport   string
-	PGAddress string
+	TCPport       string
+	DBType        string
+	PGAddress     string
+	RedisAddress  string
+	RedisPassword string
+	RedisDb       int
 }
 
 func getOsVars() *config {
@@ -22,14 +29,43 @@ func getOsVars() *config {
 		tcpPort = ":50051"
 	}
 
+	//possible values: postgres, redis, mongo
+	DBType := os.Getenv("DB_TYPE")
+	if DBType == "" {
+		DBType = "postgres"
+	}
+
 	pgAddress := os.Getenv("PG_ADDRESS")
 	if pgAddress == "" {
 		pgAddress = "host=db port=5432 dbname=persons user=persons password=pass sslmode=disable"
 	}
 
+	redisAddress := os.Getenv("REDIS_ADDRESS")
+	if redisAddress == "" {
+		redisAddress = "127.0.0.1:6379"
+	}
+
+	redisPassword := os.Getenv("REDIS_PASSWORD")
+
+	var (
+		db  int
+		err error
+	)
+	redisDb := os.Getenv("REDIS_DB")
+	if redisDb != "" {
+		db, err = strconv.Atoi(redisDb)
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	return &config{
-		TCPport:   tcpPort,
-		PGAddress: pgAddress,
+		TCPport:       tcpPort,
+		DBType:        DBType,
+		PGAddress:     pgAddress,
+		RedisAddress:  redisAddress,
+		RedisPassword: redisPassword,
+		RedisDb:       db,
 	}
 }
 
@@ -44,10 +80,16 @@ func main() {
 	}
 
 	//create storage
-	db, err := pgstorage.New(cfg.PGAddress)
-	if err != nil {
-		log.Printf("failed to connect to db: %s", err)
-		return
+	var db storage.Storage
+	switch dbtype := cfg.DBType; dbtype {
+	case "postgres":
+		db, err = pgstorage.New(cfg.PGAddress)
+		if err != nil {
+			log.Printf("failed to connect to db: %s", err)
+			return
+		}
+	case "redis":
+		db = redisstorage.NewRDS(cfg.RedisAddress, cfg.RedisPassword, cfg.RedisDb)
 	}
 
 	//create GRPC server
