@@ -36,7 +36,7 @@ func (s *HTTPHandler) GetRouter() *mux.Router {
 	router.HandleFunc("/persons/upload", s.RenderTemplate).Methods("GET")
 	router.HandleFunc("/persons/upload", s.UploadPersonsCSV).Methods("POST")
 	router.HandleFunc("/persons/{id}", s.GetPerson).Methods("GET")
-	router.HandleFunc("/persons/{id}", s.UpdatePerson).Methods("PATCH")
+	router.HandleFunc("/persons/{id}", s.UpdatePerson).Methods("PUT")
 	router.HandleFunc("/persons/{id}", s.DeletePerson).Methods("DELETE")
 
 	router.Use(s.loggingMiddleware)
@@ -193,7 +193,7 @@ func (s *HTTPHandler) UpdatePerson(w http.ResponseWriter, req *http.Request) {
 	}
 
 	//Ask the service to process action
-	updatedPerson, err := s.service.UpdatePerson(id, person.Name)
+	updatedPerson, err := s.service.UpdatePerson(id, person)
 	if err != nil {
 		s.reportError(w, err, InternalServerErr)
 		return
@@ -296,7 +296,7 @@ func (s *HTTPHandler) UploadPersonsCSV(w http.ResponseWriter, req *http.Request)
 			Name: line[1],
 		}
 
-		//If person is not in db, add it with a new id,
+		//If the person is not in db, add it with a new id,
 		_, err = s.service.GetPerson(p.Id)
 
 		//TOSO: if errors.Is(err, sql.ErrNoRows) add person. So far we assume any error as IsNil

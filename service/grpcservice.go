@@ -62,9 +62,11 @@ func (s GRPCPersonService) GetAllPersons() ([]model.Person, error) {
 	return persons, nil
 }
 
-func (s GRPCPersonService) UpdatePerson(id int, name string) (model.Person, error) {
+func (s GRPCPersonService) UpdatePerson(id int, person model.Person) (model.Person, error) {
 	//Check if there is such a person
-	resp, err := s.remoteStorage.GetPerson(context.Background(), &pb.GetPersonRequest{})
+	resp, err := s.remoteStorage.GetPerson(context.Background(), &pb.GetPersonRequest{
+		Id: int32(id),
+	})
 
 	//we assume error is sql.no rows
 	if err != nil {
@@ -73,7 +75,7 @@ func (s GRPCPersonService) UpdatePerson(id int, name string) (model.Person, erro
 
 	resp, err = s.remoteStorage.UpdatePerson(context.Background(), &pb.UpdatePersonRequest{
 		Id:   int32(id),
-		Name: name,
+		Name: person.Name,
 	})
 
 	if err != nil {
@@ -88,7 +90,9 @@ func (s GRPCPersonService) UpdatePerson(id int, name string) (model.Person, erro
 
 func (s GRPCPersonService) DeletePerson(id int) error {
 	//Check if there is such a person
-	_, err := s.remoteStorage.GetPerson(context.Background(), &pb.GetPersonRequest{})
+	_, err := s.remoteStorage.GetPerson(context.Background(), &pb.GetPersonRequest{
+		Id: int32(id),
+	})
 
 	//we assume error is sql.no rows
 	if err != nil {

@@ -14,6 +14,6 @@ type PersonService interface {
 	AddPerson(name string) (int, error)
 	GetPerson(id int) (model.Person, error)
 	GetAllPersons() ([]model.Person, error)
-	UpdatePerson(id int, name string) (model.Person, error)
+	UpdatePerson(id int, person model.Person) (model.Person, error)
 	DeletePerson(id int) error
 }
