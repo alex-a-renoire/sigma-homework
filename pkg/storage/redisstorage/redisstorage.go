@@ -45,9 +45,9 @@ func (db *RDSdb) AddPerson(p model.Person) (int, error) {
 func (db *RDSdb) GetPerson(id int) (model.Person, error) {
 	var person model.Person
 
-	res, err := db.Client.Do("GET", "person:"+strconv.Itoa(id)).Result()
+	res, err := db.Client.Get("person:" + strconv.Itoa(id)).Result()
 
-	if err = json.Unmarshal(res.([]byte), &person); err != nil {
+	if err = json.Unmarshal([]byte(res), &person); err != nil {
 		return model.Person{}, fmt.Errorf("Cannot retrieve person from db: %w", err)
 	}
 
@@ -57,19 +57,19 @@ func (db *RDSdb) GetPerson(id int) (model.Person, error) {
 func (db *RDSdb) GetAllPersons() ([]model.Person, error) {
 	var persons []model.Person
 
-	keys, err := db.Client.Do("KEYS", "person:*").Result()
+	keys, err := db.Client.Keys("person:*").Result()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to retrieve persons from db: %w", err)
 	}
 
-	for _, k := range keys.([]interface{}) {
+	for _, k := range keys {
 		var person model.Person
-		reply, err := db.Client.Do("GET", k.([]byte)).Result()
+		reply, err := db.Client.Get(k).Result()
 		if err != nil {
 			return nil, fmt.Errorf("Failed to retrieve persons from db: %w", err)
 		}
 
-		if err := json.Unmarshal(reply.([]byte), &person); err != nil {
+		if err := json.Unmarshal([]byte(reply), &person); err != nil {
 			return nil, fmt.Errorf("Failed to retrieve persons from db: %w", err)
 		}
 		persons = append(persons, person)
@@ -84,7 +84,7 @@ func (db *RDSdb) UpdatePerson(id int, p model.Person) (model.Person, error) {
 		return model.Person{}, fmt.Errorf("Cannot update person in db: %w", err)
 	}
 
-	_, err = db.Client.Do("SET", "person:"+strconv.Itoa(p.Id), person).Result()
+	_, err = db.Client.Set("person:"+strconv.Itoa(p.Id), person, 0).Result()
 	if err != nil {
 		return model.Person{}, fmt.Errorf("Cannot update person in db: %w", err)
 	}
@@ -93,7 +93,7 @@ func (db *RDSdb) UpdatePerson(id int, p model.Person) (model.Person, error) {
 }
 
 func (db *RDSdb) DeletePerson(id int) error {
-	_, err := db.Client.Do("DEL", "person:"+strconv.Itoa(id)).Result()
+	_, err := db.Client.Del("person:" + strconv.Itoa(id)).Result()
 	if err != nil {
 		return fmt.Errorf("failed to delete person: %w", err)
 	}
