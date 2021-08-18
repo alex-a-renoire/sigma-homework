@@ -28,10 +28,9 @@ func (s DierctPersonService) GetAllPersons() ([]model.Person, error) {
 	return s.db.GetAllPersons()
 }
 
-func (s DierctPersonService) UpdatePerson(id int, name string) (model.Person, error) {
-	return s.db.UpdatePerson(id, model.Person{
-		Name: name,
-	})
+func (s DierctPersonService) UpdatePerson(id int, p model.Person) error {
+	s.db.UpdatePerson(id, p)
+	return nil
 }
 
 func (s DierctPersonService) DeletePerson(id int) error {

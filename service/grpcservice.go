@@ -62,30 +62,29 @@ func (s GRPCPersonService) GetAllPersons() ([]model.Person, error) {
 	return persons, nil
 }
 
-func (s GRPCPersonService) UpdatePerson(id int, person model.Person) (model.Person, error) {
+func (s GRPCPersonService) UpdatePerson(id int, person model.Person) error {
 	//Check if there is such a person
-	resp, err := s.remoteStorage.GetPerson(context.Background(), &pb.GetPersonRequest{
+	_, err := s.remoteStorage.GetPerson(context.Background(), &pb.GetPersonRequest{
 		Id: int32(id),
 	})
 
 	//we assume error is sql.no rows
 	if err != nil {
-		return model.Person{}, fmt.Errorf("there is no such person: %w", err)
+		return fmt.Errorf("there is no such person: %w", err)
 	}
 
-	resp, err = s.remoteStorage.UpdatePerson(context.Background(), &pb.UpdatePersonRequest{
-		Id:   int32(id),
-		Name: person.Name,
+	_, err = s.remoteStorage.UpdatePerson(context.Background(), &pb.UpdatePersonRequest{
+		Id: int32(id),
+		P: &pb.Person{
+			Name: person.Name,
+		},
 	})
 
 	if err != nil {
-		return model.Person{}, fmt.Errorf("failed to update person: %w", err)
+		return fmt.Errorf("failed to update person: %w", err)
 	}
 
-	return model.Person{
-		Id:   int(resp.Id),
-		Name: resp.Name,
-	}, nil
+	return nil
 }
 
 func (s GRPCPersonService) DeletePerson(id int) error {

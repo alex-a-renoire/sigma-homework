@@ -74,18 +74,18 @@ func (ss *StorageServer) GetAllPersons(_ context.Context, in *emptypb.Empty) (*p
 	}, nil
 }
 
-func (ss *StorageServer) UpdatePerson(_ context.Context, in *pb.UpdatePersonRequest) error {
+func (ss *StorageServer) UpdatePerson(_ context.Context, in *pb.UpdatePersonRequest) (*emptypb.Empty, error) {
 	person := model.Person{
-		Name: in.Name,
+		Name: in.P.Name,
 	}
 
 	log.Println("Update person command received...")
-	err := ss.DB.UpdatePerson(int(in.Id), person)
+	err := ss.DB.UpdatePerson(int(in.P.Id), person)
 	if err != nil {
-		return fmt.Errorf("failed to update person: %w", err)
+		return &emptypb.Empty{}, fmt.Errorf("failed to update person: %w", err)
 	}
 
-	return nil
+	return &emptypb.Empty{}, nil
 }
 
 func (ss *StorageServer) DeletePerson(_ context.Context, in *pb.DeletePersonRequest) (*emptypb.Empty, error) {

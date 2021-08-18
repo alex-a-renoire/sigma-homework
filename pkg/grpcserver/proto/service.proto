@@ -36,7 +36,7 @@ message AllPersonsResponse {
 
 message UpdatePersonRequest {
     int32 id = 1;
-    string name = 2;
+    Person p = 2;
 }
 
 message DeletePersonRequest {

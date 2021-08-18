@@ -193,22 +193,14 @@ func (s *HTTPHandler) UpdatePerson(w http.ResponseWriter, req *http.Request) {
 	}
 
 	//Ask the service to process action
-	updatedPerson, err := s.service.UpdatePerson(id, person)
-	if err != nil {
-		s.reportError(w, err, InternalServerErr)
-		return
-	}
-
-	//Marshal updated person
-	p, err = json.Marshal(updatedPerson)
+	err = s.service.UpdatePerson(id, person)
 	if err != nil {
 		s.reportError(w, err, InternalServerErr)
 		return
 	}
 
 	//write the data to response
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(p)
+	w.WriteHeader(http.StatusOK)
 }
 
 func (s *HTTPHandler) DeletePerson(w http.ResponseWriter, req *http.Request) {
@@ -303,7 +295,7 @@ func (s *HTTPHandler) UploadPersonsCSV(w http.ResponseWriter, req *http.Request)
 		if err != nil {
 			_, err = s.service.AddPerson(p.Name)
 		} else {
-			_, err := s.service.UpdatePerson(p.Id, p.Name)
+			err := s.service.UpdatePerson(p.Id, p)
 			if err != nil {
 				s.reportError(w, err, InternalServerErr)
 				return

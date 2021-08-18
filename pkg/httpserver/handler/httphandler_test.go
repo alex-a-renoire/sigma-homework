@@ -121,11 +121,8 @@ func TestHttpHandler(t *testing.T) {
 			name: "UPDATE /persons/1 OK",
 			fields: fields{
 				s: storage.MockStorage{
-					MockUpdatePerson: func(_ int, _ string) (model.Person, error) {
-						return model.Person{
-							Id:   1,
-							Name: "Jane",
-						}, nil
+					MockUpdatePerson: func(_ int, p model.Person) error {
+						return nil
 					},
 				},
 			},

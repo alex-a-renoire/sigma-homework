@@ -6,7 +6,7 @@ type PersonStorage interface {
 	AddPerson(p model.Person) (int, error)
 	GetPerson(id int) (model.Person, error)
 	GetAllPersons() ([]model.Person, error)
-	UpdatePerson(id int, p model.Person) (model.Person, error)
+	UpdatePerson(id int, person model.Person) error
 	DeletePerson(id int) error
 }
 
@@ -14,6 +14,6 @@ type PersonService interface {
 	AddPerson(name string) (int, error)
 	GetPerson(id int) (model.Person, error)
 	GetAllPersons() ([]model.Person, error)
-	UpdatePerson(id int, person model.Person) (model.Person, error)
+	UpdatePerson(id int, person model.Person) error
 	DeletePerson(id int) error
 }

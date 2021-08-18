@@ -70,12 +70,12 @@ func (s *PGPersonStorage) GetAllPersons() ([]model.Person, error) {
 	return slicePersons, nil
 }
 
-func (s *PGPersonStorage) UpdatePerson(id int, p model.Person) (model.Person, error) {
+func (s *PGPersonStorage) UpdatePerson(id int, p model.Person) error {
 	_, err := s.db.Exec("UPDATE persons SET name = $1 WHERE id=$2", p.Name, id)
 	if err != nil {
-		return model.Person{}, fmt.Errorf("failed to update person: %w", err)
+		return fmt.Errorf("failed to update person: %w", err)
 	}
-	return model.Person{}, nil
+	return nil
 }
 
 func (s *PGPersonStorage) DeletePerson(id int) error {

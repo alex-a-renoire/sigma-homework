@@ -78,18 +78,18 @@ func (db *RDSdb) GetAllPersons() ([]model.Person, error) {
 	return persons, nil
 }
 
-func (db *RDSdb) UpdatePerson(id int, p model.Person) (model.Person, error) {
+func (db *RDSdb) UpdatePerson(id int, p model.Person) error {
 	person, err := json.Marshal(p)
 	if err != nil {
-		return model.Person{}, fmt.Errorf("Cannot update person in db: %w", err)
+		return fmt.Errorf("Cannot update person in db: %w", err)
 	}
 
 	_, err = db.Client.Set("person:"+strconv.Itoa(p.Id), person, 0).Result()
 	if err != nil {
-		return model.Person{}, fmt.Errorf("Cannot update person in db: %w", err)
+		return fmt.Errorf("Cannot update person in db: %w", err)
 	}
 
-	return p, nil
+	return nil
 }
 
 func (db *RDSdb) DeletePerson(id int) error {
