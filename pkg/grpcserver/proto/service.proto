@@ -9,7 +9,7 @@ service StorageService {
     rpc AddPerson(AddPersonRequest) returns (AddPersonResponse) {}
     rpc GetPerson(GetPersonRequest) returns (Person) {}
     rpc GetAllPersons(google.protobuf.Empty) returns (AllPersonsResponse) {}
-    rpc UpdatePerson(UpdatePersonRequest) returns (google.protobuf.Empty) {}
+    rpc UpdatePerson(Person) returns (google.protobuf.Empty) {}
     rpc DeletePerson(DeletePersonRequest) returns (google.protobuf.Empty) {}
 } 
 
@@ -32,11 +32,6 @@ message Person {
 
 message AllPersonsResponse {
     repeated Person allPersons = 1;
-}
-
-message UpdatePersonRequest {
-    int32 id = 1;
-    Person p = 2;
 }
 
 message DeletePersonRequest {

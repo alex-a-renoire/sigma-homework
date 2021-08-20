@@ -26,7 +26,7 @@ type StorageServiceClient interface {
 	AddPerson(ctx context.Context, in *AddPersonRequest, opts ...grpc.CallOption) (*AddPersonResponse, error)
 	GetPerson(ctx context.Context, in *GetPersonRequest, opts ...grpc.CallOption) (*Person, error)
 	GetAllPersons(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*AllPersonsResponse, error)
-	UpdatePerson(ctx context.Context, in *UpdatePersonRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	UpdatePerson(ctx context.Context, in *Person, opts ...grpc.CallOption) (*empty.Empty, error)
 	DeletePerson(ctx context.Context, in *DeletePersonRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 }
 
@@ -65,7 +65,7 @@ func (c *storageServiceClient) GetAllPersons(ctx context.Context, in *empty.Empt
 	return out, nil
 }
 
-func (c *storageServiceClient) UpdatePerson(ctx context.Context, in *UpdatePersonRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (c *storageServiceClient) UpdatePerson(ctx context.Context, in *Person, opts ...grpc.CallOption) (*empty.Empty, error) {
 	out := new(empty.Empty)
 	err := c.cc.Invoke(ctx, "/grpcserver.StorageService/UpdatePerson", in, out, opts...)
 	if err != nil {
@@ -90,7 +90,7 @@ type StorageServiceServer interface {
 	AddPerson(context.Context, *AddPersonRequest) (*AddPersonResponse, error)
 	GetPerson(context.Context, *GetPersonRequest) (*Person, error)
 	GetAllPersons(context.Context, *empty.Empty) (*AllPersonsResponse, error)
-	UpdatePerson(context.Context, *UpdatePersonRequest) (*empty.Empty, error)
+	UpdatePerson(context.Context, *Person) (*empty.Empty, error)
 	DeletePerson(context.Context, *DeletePersonRequest) (*empty.Empty, error)
 	mustEmbedUnimplementedStorageServiceServer()
 }
@@ -108,7 +108,7 @@ func (UnimplementedStorageServiceServer) GetPerson(context.Context, *GetPersonRe
 func (UnimplementedStorageServiceServer) GetAllPersons(context.Context, *empty.Empty) (*AllPersonsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllPersons not implemented")
 }
-func (UnimplementedStorageServiceServer) UpdatePerson(context.Context, *UpdatePersonRequest) (*empty.Empty, error) {
+func (UnimplementedStorageServiceServer) UpdatePerson(context.Context, *Person) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdatePerson not implemented")
 }
 func (UnimplementedStorageServiceServer) DeletePerson(context.Context, *DeletePersonRequest) (*empty.Empty, error) {
@@ -182,7 +182,7 @@ func _StorageService_GetAllPersons_Handler(srv interface{}, ctx context.Context,
 }
 
 func _StorageService_UpdatePerson_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdatePersonRequest)
+	in := new(Person)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -194,7 +194,7 @@ func _StorageService_UpdatePerson_Handler(srv interface{}, ctx context.Context, 
 		FullMethod: "/grpcserver.StorageService/UpdatePerson",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(StorageServiceServer).UpdatePerson(ctx, req.(*UpdatePersonRequest))
+		return srv.(StorageServiceServer).UpdatePerson(ctx, req.(*Person))
 	}
 	return interceptor(ctx, in, info, handler)
 }
