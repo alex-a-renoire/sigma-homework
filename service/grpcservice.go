@@ -2,13 +2,19 @@ package service
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
+	"log"
 
 	"github.com/alex-a-renoire/sigma-homework/model"
 	pb "github.com/alex-a-renoire/sigma-homework/pkg/grpcserver/proto"
+	"github.com/go-redis/redis"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
+//TODO validation
+//TODO
 type GRPCPersonService struct {
 	remoteStorage pb.StorageServiceClient
 }
@@ -35,6 +41,9 @@ func (s GRPCPersonService) GetPerson(id int) (model.Person, error) {
 		Id: int32(id),
 	})
 	if err != nil {
+		if errors.Is(err, redis.Nil) || errors.Is(err, sql.ErrNoRows) {
+			return model.Person{}, fmt.Errorf("no such record")
+		}
 		return model.Person{}, fmt.Errorf("failed to get person: %w", err)
 	}
 
@@ -68,17 +77,19 @@ func (s GRPCPersonService) UpdatePerson(id int, person model.Person) error {
 		Id: int32(id),
 	})
 
-	//we assume error is sql.no rows
 	if err != nil {
-		return fmt.Errorf("there is no such person: %w", err)
+		if errors.Is(err, redis.Nil) || errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("no such record")
+		}
+		return fmt.Errorf("failed to get person: %w", err)
 	}
 
-	_, err = s.remoteStorage.UpdatePerson(context.Background(), &pb.UpdatePersonRequest{
-		Id: int32(id),
-		P: &pb.Person{
-			Name: person.Name,
-		},
-	})
+	log.Printf("Id service %d", int32(id))
+	_, err = s.remoteStorage.UpdatePerson(context.Background(), &pb.Person{
+		Id:   int32(id),
+		Name: person.Name,
+	},
+	)
 
 	if err != nil {
 		return fmt.Errorf("failed to update person: %w", err)

@@ -265,6 +265,7 @@ func (s *HTTPHandler) RenderTemplate(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 }
 
+//TODO отделить бизнес логику от транспортного слоя
 func (s *HTTPHandler) UploadPersonsCSV(w http.ResponseWriter, req *http.Request) {
 	//Read a file from the form
 	file, _, err := req.FormFile("uploadfile")
@@ -274,6 +275,7 @@ func (s *HTTPHandler) UploadPersonsCSV(w http.ResponseWriter, req *http.Request)
 	}
 
 	//Parse CSV
+	//TODO: Replace readall to line by line reading
 	lines, err := csv.NewReader(file).ReadAll()
 	persons := []model.Person{}
 
@@ -305,13 +307,13 @@ func (s *HTTPHandler) UploadPersonsCSV(w http.ResponseWriter, req *http.Request)
 		persons = append(persons, p)
 	}
 
-	ps, err := json.Marshal(persons)
-	if err != nil {
-		s.reportError(w, err, InternalServerErr)
-		return
-	}
+	// ps, err := json.Marshal(persons)
+	// if err != nil {
+	// 	s.reportError(w, err, InternalServerErr)
+	// 	return
+	// }
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(ps)
+	// w.Write(ps)
 }
 
 //////////////

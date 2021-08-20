@@ -2,6 +2,8 @@ package storage
 
 import "github.com/alex-a-renoire/sigma-homework/model"
 
+//TODO save by UUID
+
 type Storage interface {
 	AddPerson(p model.Person) (int, error)
 	GetPerson(id int) (model.Person, error)
