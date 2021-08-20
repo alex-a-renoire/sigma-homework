@@ -52,16 +52,16 @@ func (s *PersonStorage) GetAllPersons() ([]model.Person, error) {
 	return persons, nil
 }
 
-func (s *PersonStorage) UpdatePerson(id int, p model.Person) (model.Person, error) {
+func (s *PersonStorage) UpdatePerson(id int, p model.Person) error {
 	s.mu.Lock()
 	if _, ok := s.MapPerson[id]; !ok {
-		return model.Person{}, fmt.Errorf("person with id %d not found", id)
+		return fmt.Errorf("person with id %d not found", id)
 	}
 
 	p.Id = id
 	s.MapPerson[id] = p
 	s.mu.Unlock()
-	return s.MapPerson[id], nil
+	return nil
 }
 
 func (s *PersonStorage) DeletePerson(id int) error {

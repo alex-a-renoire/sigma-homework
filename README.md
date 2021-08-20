@@ -37,7 +37,7 @@ make httpserver
 - **REQUEST** http -v DELETE 127.0.0.1:8081/persons/1               **RESPONSE**: Person with id 1 deleted
 - **REQUEST** http -v GET 127.0.0.1:8081/persons/1                  **RESPONSE**: error: person with id 1 not found
 - **REQUEST** http -v GET 127.0.0.1:8081/persons                    **RESPONSE**: All persons in the storage are [{2 Alice}]
-- **REQUEST** http -v PATCH 127.0.0.1:8081/persons/2 "Name"="Rachel **RESPONSE**: Person with id 2 updated with name Rachel
+- **REQUEST** http -v PATCH 127.0.0.1:8081/persons/2 "Name"="Rachel" **RESPONSE**: Person with id 2 updated with name Rachel
 - **REQUEST** http -v GET 127.0.0.1:8081/persons                    **RESPONSE**: All persons in the storage are [{2 Rachel}]
 
 - **REQUEST** http -v GET 127.0.0.1:8081/persons/dump

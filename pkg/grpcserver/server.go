@@ -18,6 +18,12 @@ type StorageServer struct {
 	DB storage.Storage
 }
 
+func NewGRPC(db storage.Storage) *StorageServer {
+	return &StorageServer{
+		DB: db,
+	}
+}
+
 func (ss *StorageServer) AddPerson(_ context.Context, in *pb.AddPersonRequest) (*pb.AddPersonResponse, error) {
 	log.Println("Add person command received...")
 	p := model.Person{
@@ -68,21 +74,18 @@ func (ss *StorageServer) GetAllPersons(_ context.Context, in *emptypb.Empty) (*p
 	}, nil
 }
 
-func (ss *StorageServer) UpdatePerson(_ context.Context, in *pb.UpdatePersonRequest) (*pb.Person, error) {
+func (ss *StorageServer) UpdatePerson(_ context.Context, in *pb.UpdatePersonRequest) (*emptypb.Empty, error) {
 	person := model.Person{
-		Name: in.Name,
+		Name: in.P.Name,
 	}
 
 	log.Println("Update person command received...")
-	p, err := ss.DB.UpdatePerson(int(in.Id), person)
+	err := ss.DB.UpdatePerson(int(in.P.Id), person)
 	if err != nil {
-		return nil, fmt.Errorf("failed to update person: %w", err)
+		return &emptypb.Empty{}, fmt.Errorf("failed to update person: %w", err)
 	}
 
-	return &pb.Person{
-		Id:   int32(p.Id),
-		Name: p.Name,
-	}, nil
+	return &emptypb.Empty{}, nil
 }
 
 func (ss *StorageServer) DeletePerson(_ context.Context, in *pb.DeletePersonRequest) (*emptypb.Empty, error) {

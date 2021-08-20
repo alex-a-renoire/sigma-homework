@@ -32,4 +32,10 @@ services:
     ports: 
       - 50051:50051
     environment:
+      - DB_TYPE
+      - REDIS_ADDRESS
+      - PG_ADDRESS
       - GRPC_LISTEN_ADDRESS
+  
+  redis:
+    image: redis
