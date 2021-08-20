@@ -1,6 +1,8 @@
 package service
 
 import (
+	"mime/multipart"
+
 	"github.com/alex-a-renoire/sigma-homework/model"
 )
 
@@ -36,4 +38,12 @@ func (s DierctPersonService) UpdatePerson(id int, name string) (model.Person, er
 
 func (s DierctPersonService) DeletePerson(id int) error {
 	return s.db.DeletePerson(id)
+}
+
+func (s DierctPersonService) DownloadPersonsCSV() ([]byte, error) {
+	return nil, nil
+}
+
+func (s DierctPersonService) ProcessCSV(file multipart.File) error {
+	return nil
 }
