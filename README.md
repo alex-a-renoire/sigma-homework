@@ -43,7 +43,3 @@ make httpserver
 
 - **REQUEST** http -v GET 127.0.0.1:8081/persons/dump
 - **REQUEST** 127.0.0.1:8081/persons/upload
-
-TODO:
- - On delete if no entity display error
- - add uuid to postgres and redis

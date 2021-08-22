@@ -19,8 +19,6 @@ import (
 	pb "github.com/alex-a-renoire/sigma-homework/pkg/grpcserver/proto"
 )
 
-//TODO validation
-//TODO
 type GRPCPersonService struct {
 	remoteStorage pb.StorageServiceClient
 }
@@ -48,7 +46,7 @@ func (s GRPCPersonService) GetPerson(id int) (model.Person, error) {
 	})
 	if err != nil {
 		if errors.Is(err, redis.Nil) || errors.Is(err, sql.ErrNoRows) {
-			return model.Person{}, fmt.Errorf("no such record")
+			return model.Person{}, fmt.Errorf("no such record: %w", err)
 		}
 		return model.Person{}, fmt.Errorf("failed to get person: %w", err)
 	}
@@ -85,7 +83,7 @@ func (s GRPCPersonService) UpdatePerson(id int, person model.Person) error {
 
 	if err != nil {
 		if errors.Is(err, redis.Nil) || errors.Is(err, sql.ErrNoRows) {
-			return fmt.Errorf("no such record")
+			return fmt.Errorf("no such record: %w", err)
 		}
 		return fmt.Errorf("failed to get person: %w", err)
 	}
@@ -139,16 +137,15 @@ func (s GRPCPersonService) ProcessCSV(file multipart.File) error {
 	for i := 0; ; i++ {
 		record, err := reader.Read()
 		if err != nil {
-			if err == io.EOF { //TODO: replace with errors.Is
-				if i == 0 {
-					//if there's only headers and no values
-					return fmt.Errorf("Malformed csv file: %w", err)
-				} else {
-					//end of the file
-					return nil
-				}
-			} else {
+			if err != io.EOF {
 				return fmt.Errorf("Error reading file: %w", err)
+			}
+			if i == 0 {
+				//if there's only headers and no values
+				return fmt.Errorf("Malformed csv file: %w", err)
+			} else {
+				//end of the file
+				return nil
 			}
 		}
 
@@ -170,23 +167,21 @@ func (s GRPCPersonService) ProcessCSV(file multipart.File) error {
 		}
 
 		//handle situation when there is such a record and we are updating
-		_, err = s.GetPerson(p.Id)
-		if err == nil {
-			_, err := s.UpdatePerson(p.Id, p.Name)
-			if err != nil {
+		if _, err = s.GetPerson(p.Id); err == nil {
+			if err := s.UpdatePerson(p.Id, p); err != nil {
 				return fmt.Errorf("failed to update person in db: %w", err)
 			}
 			return nil
 		}
 
 		//If person is not in db, add it with a new id
-		if err != sql.ErrNoRows && err != redis.Nil {
-			return fmt.Errorf("failed to get person: %w", err)
+		if errors.Is(err, sql.ErrNoRows) || errors.Is(err, redis.Nil) {
+			if _, err = s.AddPerson(p.Name); err != nil {
+				return fmt.Errorf("failed to add person to db: %w", err)
+			}
 		}
 
-		if _, err = s.AddPerson(p.Name); err != nil {
-			return fmt.Errorf("failed to add person to db: %w", err)
-		}
+		return fmt.Errorf("failed to get person: %w", err)
 	}
 }
 

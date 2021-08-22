@@ -47,6 +47,8 @@ func (db *RDSdb) GetPerson(id int) (model.Person, error) {
 	var person model.Person
 
 	res, err := db.Client.Get("person:" + strconv.Itoa(id)).Result()
+
+	log.Print("Err: %w", err)
 	if err != nil {
 		return model.Person{}, fmt.Errorf("failed to find person: %w", err)
 	}
