@@ -7,11 +7,11 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
-	"strconv"
 	"text/template"
 
 	"github.com/alex-a-renoire/sigma-homework/model"
 	"github.com/alex-a-renoire/sigma-homework/service"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
@@ -117,7 +117,7 @@ func (s *HTTPHandler) GetPerson(w http.ResponseWriter, req *http.Request) {
 
 	//get the route variable ID of the person we want to retrieve
 	vars := mux.Vars(req)
-	id, err := strconv.Atoi(vars["id"])
+	id, err := uuid.FromBytes([]byte(vars["id"]))
 	if err != nil {
 		s.reportError(w, err, BadRequestErr)
 		return
@@ -170,7 +170,7 @@ func (s *HTTPHandler) UpdatePerson(w http.ResponseWriter, req *http.Request) {
 
 	//get the route variable ID of the person we want to retrieve
 	vars := mux.Vars(req)
-	id, err := strconv.Atoi(vars["id"])
+	id, err := uuid.FromBytes([]byte(vars["id"]))
 	if err != nil {
 		s.reportError(w, err, BadRequestErr)
 		return
@@ -206,7 +206,7 @@ func (s *HTTPHandler) DeletePerson(w http.ResponseWriter, req *http.Request) {
 
 	//get the route variable ID of the person we want to delete
 	vars := mux.Vars(req)
-	id, err := strconv.Atoi(vars["id"])
+	id, err := uuid.FromBytes([]byte(vars["id"]))
 	if err != nil {
 		s.reportError(w, err, BadRequestErr)
 		return

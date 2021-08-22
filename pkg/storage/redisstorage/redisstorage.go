@@ -9,6 +9,7 @@ import (
 
 	"github.com/alex-a-renoire/sigma-homework/model"
 	"github.com/go-redis/redis"
+	"github.com/google/uuid"
 )
 
 type RDSdb struct {
@@ -27,26 +28,24 @@ func NewRDS(addr string, pwd string, dbname int) *RDSdb {
 	}
 }
 
-func (db *RDSdb) AddPerson(p model.Person) (int, error) {
-	db.currentPersonId += 1
-
+func (db *RDSdb) AddPerson(p model.Person) (uuid.UUID, error) {
 	person, err := json.Marshal(p)
 	if err != nil {
-		return 0, fmt.Errorf("Cannot add person to db: %w", err)
+		return uuid.Nil, fmt.Errorf("Cannot add person to db: %w", err)
 	}
 
 	_, err = db.Client.Set("person:"+strconv.Itoa(db.currentPersonId), person, 0).Result()
 	if err != nil {
-		return 0, fmt.Errorf("Cannot add person to db: %w", err)
+		return uuid.Nil, fmt.Errorf("Cannot add person to db: %w", err)
 	}
 
-	return db.currentPersonId, nil
+	return uuid.New(), nil
 }
 
-func (db *RDSdb) GetPerson(id int) (model.Person, error) {
+func (db *RDSdb) GetPerson(id uuid.UUID) (model.Person, error) {
 	var person model.Person
 
-	res, err := db.Client.Get("person:" + strconv.Itoa(id)).Result()
+	res, err := db.Client.Get("person:" + id.String()).Result()
 
 	log.Print("Err: %w", err)
 	if err != nil {
@@ -81,7 +80,7 @@ func (db *RDSdb) GetAllPersons() ([]model.Person, error) {
 			return nil, fmt.Errorf("Failed to retrieve persons from db: %w", err)
 		}
 
-		person.Id, err = strconv.Atoi(strings.TrimPrefix(k, "person:"))
+		person.Id, err = uuid.FromBytes([]byte(strings.TrimPrefix(k, "person:")))
 		if err != nil {
 			return nil, fmt.Errorf("malformed id or prefix: %w", err)
 		}
@@ -92,15 +91,13 @@ func (db *RDSdb) GetAllPersons() ([]model.Person, error) {
 	return persons, nil
 }
 
-func (db *RDSdb) UpdatePerson(id int, p model.Person) error {
-	log.Printf("Id: %d", id)
-
+func (db *RDSdb) UpdatePerson(id uuid.UUID, p model.Person) error {
 	person, err := json.Marshal(p)
 	if err != nil {
 		return fmt.Errorf("Cannot marshal person: %w", err)
 	}
 
-	_, err = db.Client.Set("person:"+strconv.Itoa(id), person, 0).Result()
+	_, err = db.Client.Set("person:"+id.String(), person, 0).Result()
 	if err != nil {
 		return fmt.Errorf("failed to update record: %w", err)
 	}
@@ -108,8 +105,8 @@ func (db *RDSdb) UpdatePerson(id int, p model.Person) error {
 	return nil
 }
 
-func (db *RDSdb) DeletePerson(id int) error {
-	_, err := db.Client.Del("person:" + strconv.Itoa(id)).Result()
+func (db *RDSdb) DeletePerson(id uuid.UUID) error {
+	_, err := db.Client.Del("person:" + id.String()).Result()
 	if err != nil {
 		return fmt.Errorf("failed to delete person: %w", err)
 	}

@@ -4,6 +4,7 @@ import (
 	"mime/multipart"
 
 	"github.com/alex-a-renoire/sigma-homework/model"
+	"github.com/google/uuid"
 )
 
 type DierctPersonService struct {
@@ -16,13 +17,13 @@ func NewDirect(db PersonStorage) DierctPersonService {
 	}
 }
 
-func (s DierctPersonService) AddPerson(name string) (int, error) {
+func (s DierctPersonService) AddPerson(name string) (uuid.UUID, error) {
 	return s.db.AddPerson(model.Person{
 		Name: name,
 	})
 }
 
-func (s DierctPersonService) GetPerson(id int) (model.Person, error) {
+func (s DierctPersonService) GetPerson(id uuid.UUID) (model.Person, error) {
 	return s.db.GetPerson(id)
 }
 
@@ -30,12 +31,12 @@ func (s DierctPersonService) GetAllPersons() ([]model.Person, error) {
 	return s.db.GetAllPersons()
 }
 
-func (s DierctPersonService) UpdatePerson(id int, p model.Person) error {
+func (s DierctPersonService) UpdatePerson(id uuid.UUID, p model.Person) error {
 	s.db.UpdatePerson(id, p)
 	return nil
 }
 
-func (s DierctPersonService) DeletePerson(id int) error {
+func (s DierctPersonService) DeletePerson(id uuid.UUID) error {
 	return s.db.DeletePerson(id)
 }
 

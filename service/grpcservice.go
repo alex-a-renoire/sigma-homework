@@ -7,11 +7,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"mime/multipart"
-	"strconv"
 
 	"github.com/go-redis/redis"
+	"github.com/google/uuid"
 	"github.com/jszwec/csvutil"
 	"google.golang.org/protobuf/types/known/emptypb"
 
@@ -29,20 +28,35 @@ func NewGRPC(db pb.StorageServiceClient) GRPCPersonService {
 	}
 }
 
-func (s GRPCPersonService) AddPerson(name string) (int, error) {
+func ConvertPbToPgID(id *pb.UUID) (uuid.UUID, error) {
+	return uuid.FromBytes([]byte(id.Value))
+}
+
+func ConvertPgToPbID(id uuid.UUID) *pb.UUID {
+	return &pb.UUID{
+		Value: id.String(),
+	}
+}
+
+func (s GRPCPersonService) AddPerson(name string) (uuid.UUID, error) {
 	resp, err := s.remoteStorage.AddPerson(context.Background(), &pb.AddPersonRequest{
 		Name: name,
 	})
 	if err != nil {
-		return 0, fmt.Errorf("failed to add person: %w", err)
+		return uuid.Nil, fmt.Errorf("failed to add person: %w", err)
 	}
 
-	return int(resp.Id), nil
+	id, err := ConvertPbToPgID(resp.Id)
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("failed to convert types protobuf to postgres: %w", err)
+	}
+
+	return id, nil
 }
 
-func (s GRPCPersonService) GetPerson(id int) (model.Person, error) {
+func (s GRPCPersonService) GetPerson(id uuid.UUID) (model.Person, error) {
 	resp, err := s.remoteStorage.GetPerson(context.Background(), &pb.GetPersonRequest{
-		Id: int32(id),
+		Id: ConvertPgToPbID(id),
 	})
 	if err != nil {
 		if errors.Is(err, redis.Nil) || errors.Is(err, sql.ErrNoRows) {
@@ -51,8 +65,13 @@ func (s GRPCPersonService) GetPerson(id int) (model.Person, error) {
 		return model.Person{}, fmt.Errorf("failed to get person: %w", err)
 	}
 
+	id, err = ConvertPbToPgID(resp.Id)
+	if err != nil {
+		return model.Person{}, fmt.Errorf("failed to convert types protobuf to postgres: %w", err)
+	}
+
 	return model.Person{
-		Id:   int(resp.Id),
+		Id:   id,
 		Name: resp.Name,
 	}, nil
 }
@@ -66,8 +85,13 @@ func (s GRPCPersonService) GetAllPersons() ([]model.Person, error) {
 	persons := []model.Person{}
 
 	for _, p := range resp.AllPersons {
+		id, err := ConvertPbToPgID(p.Id)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert types protobuf to postgres: %w", err)
+		}
+
 		persons = append(persons, model.Person{
-			Id:   int(p.Id),
+			Id:   id,
 			Name: p.Name,
 		})
 	}
@@ -75,10 +99,10 @@ func (s GRPCPersonService) GetAllPersons() ([]model.Person, error) {
 	return persons, nil
 }
 
-func (s GRPCPersonService) UpdatePerson(id int, person model.Person) error {
+func (s GRPCPersonService) UpdatePerson(id uuid.UUID, person model.Person) error {
 	//Check if there is such a person
 	_, err := s.remoteStorage.GetPerson(context.Background(), &pb.GetPersonRequest{
-		Id: int32(id),
+		Id: ConvertPgToPbID(id),
 	})
 
 	if err != nil {
@@ -88,9 +112,8 @@ func (s GRPCPersonService) UpdatePerson(id int, person model.Person) error {
 		return fmt.Errorf("failed to get person: %w", err)
 	}
 
-	log.Printf("Id service %d", int32(id))
 	_, err = s.remoteStorage.UpdatePerson(context.Background(), &pb.Person{
-		Id:   int32(id),
+		Id:   ConvertPgToPbID(id),
 		Name: person.Name,
 	},
 	)
@@ -102,10 +125,10 @@ func (s GRPCPersonService) UpdatePerson(id int, person model.Person) error {
 	return nil
 }
 
-func (s GRPCPersonService) DeletePerson(id int) error {
+func (s GRPCPersonService) DeletePerson(id uuid.UUID) error {
 	//Check if there is such a person
 	_, err := s.remoteStorage.GetPerson(context.Background(), &pb.GetPersonRequest{
-		Id: int32(id),
+		Id: ConvertPgToPbID(id),
 	})
 
 	//we assume error is sql.no rows
@@ -114,7 +137,7 @@ func (s GRPCPersonService) DeletePerson(id int) error {
 	}
 
 	_, err = s.remoteStorage.DeletePerson(context.Background(), &pb.DeletePersonRequest{
-		Id: int32(id),
+		Id: ConvertPgToPbID(id),
 	})
 
 	if err != nil {
@@ -156,7 +179,7 @@ func (s GRPCPersonService) ProcessCSV(file multipart.File) error {
 		if record[0] == "" || record[1] == "" {
 			return fmt.Errorf("malformed csv file")
 		}
-		id, err := strconv.Atoi(record[0])
+		id, err := uuid.FromBytes([]byte(record[0]))
 		if err != nil {
 			return fmt.Errorf("malformed id, should be a number: %w", err)
 		}

@@ -1,10 +1,14 @@
 package model
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/google/uuid"
+)
 
 type Person struct {
-	Id   int    `json:"id,omitempty" csv:"id, omitempty"`
-	Name string `json:"name,omitempty" csv:"name"`
+	Id   uuid.UUID `json:"id,omitempty" csv:"id, omitempty"`
+	Name string    `json:"name,omitempty" csv:"name"`
 }
 
 func (p *Person) String() string {
@@ -12,7 +16,7 @@ func (p *Person) String() string {
 }
 
 func (p *Person) Validate() error {
-	if p.Id == 0 && p.Name == "" {
+	if p.Id == uuid.Nil && p.Name == "" {
 		return fmt.Errorf("person name and id are not specified. At least one of the two should be specified")
 	}
 	return nil

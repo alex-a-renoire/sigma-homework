@@ -1,22 +1,25 @@
 package storage
 
-import "github.com/alex-a-renoire/sigma-homework/model"
+import (
+	"github.com/alex-a-renoire/sigma-homework/model"
+	"github.com/google/uuid"
+)
 
 var _ Storage = MockStorage{}
 
 type MockStorage struct {
-	MockAddPerson     func(name string) (int, error)
-	MockGetPerson     func(id int) (model.Person, error)
+	MockAddPerson     func(name string) (uuid.UUID, error)
+	MockGetPerson     func(id uuid.UUID) (model.Person, error)
 	MockGetAllPersons func() ([]model.Person, error)
-	MockUpdatePerson  func(id int, person model.Person) error
-	MockDeletePerson  func(id int) error
+	MockUpdatePerson  func(id uuid.UUID, person model.Person) error
+	MockDeletePerson  func(id uuid.UUID) error
 }
 
-func (m MockStorage) AddPerson(p model.Person) (int, error) {
+func (m MockStorage) AddPerson(p model.Person) (uuid.UUID, error) {
 	return m.MockAddPerson(p.Name)
 }
 
-func (m MockStorage) GetPerson(id int) (model.Person, error) {
+func (m MockStorage) GetPerson(id uuid.UUID) (model.Person, error) {
 	return m.MockGetPerson(id)
 }
 
@@ -24,10 +27,10 @@ func (m MockStorage) GetAllPersons() ([]model.Person, error) {
 	return m.MockGetAllPersons()
 }
 
-func (m MockStorage) UpdatePerson(id int, p model.Person) error {
+func (m MockStorage) UpdatePerson(id uuid.UUID, p model.Person) error {
 	return m.MockUpdatePerson(id, p)
 }
 
-func (m MockStorage) DeletePerson(id int) error {
+func (m MockStorage) DeletePerson(id uuid.UUID) error {
 	return m.MockDeletePerson(id)
 }
