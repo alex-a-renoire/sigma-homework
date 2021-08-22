@@ -13,20 +13,25 @@ service StorageService {
     rpc DeletePerson(DeletePersonRequest) returns (google.protobuf.Empty) {}
 } 
 
+
+message UUID {
+    string value = 1;
+}
+
 message AddPersonRequest {
     string name = 1;
 }
 
 message AddPersonResponse {
-    int32 id = 1;
+    UUID id = 1;
 }
 
 message GetPersonRequest {
-    int32 id = 1;
+    UUID id = 1;
 }
 
 message Person {
-    int32 id = 1;
+    UUID id = 1;
     string name = 2;
 }
 
@@ -35,5 +40,5 @@ message AllPersonsResponse {
 }
 
 message DeletePersonRequest {
-    int32 id = 1;
+    UUID id = 1;
 }
