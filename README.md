@@ -42,7 +42,8 @@ make httpserver
 - **REQUEST** http -v GET 127.0.0.1:8081/persons                    **RESPONSE**: All persons in the storage are [{2 Rachel}]
 
 - **REQUEST** http -v GET 127.0.0.1:8081/persons/dump
-127.0.0.1:8081/persons/upload
+- **REQUEST** 127.0.0.1:8081/persons/upload
 
 TODO:
  - On delete if no entity display error
+ - add uuid to postgres and redis

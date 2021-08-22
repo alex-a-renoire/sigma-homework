@@ -135,14 +135,33 @@ func (s GRPCPersonService) ProcessCSV(file multipart.File) error {
 	reader := csv.NewReader(file)
 	reader.Read()
 
-	for {
+	//loop of reading
+	for i := 0; ; i++ {
 		record, err := reader.Read()
+		if err != nil {
+			if err == io.EOF { //TODO: replace with errors.Is
+				if i == 0 {
+					//if there's only headers and no values
+					return fmt.Errorf("Malformed csv file: %w", err)
+				} else {
+					//end of the file
+					return nil
+				}
+			} else {
+				return fmt.Errorf("Error reading file: %w", err)
+			}
+		}
+
+		//malformed csv handling
+		if len(record) != 2 {
+			return fmt.Errorf("Malformed csv file: wrong number of fields")
+		}
+		if record[0] == "" || record[1] == "" {
+			return fmt.Errorf("malformed csv file")
+		}
 		id, err := strconv.Atoi(record[0])
 		if err != nil {
-			if err == io.EOF {
-				return nil
-			}
-			return fmt.Errorf("malformed csv file")
+			return fmt.Errorf("malformed id, should be a number: %w", err)
 		}
 
 		p := model.Person{
@@ -150,19 +169,23 @@ func (s GRPCPersonService) ProcessCSV(file multipart.File) error {
 			Name: record[1],
 		}
 
-		//If person is not in db, add it with a new id,
+		//handle situation when there is such a record and we are updating
 		_, err = s.GetPerson(p.Id)
-
-		//TODO add uuid
-		//TODO: if errors.Is(err, sql.ErrNoRows) add person. So far we assume any error as IsNil
-		if err != nil {
-			_, err = s.AddPerson(p.Name)
-			return fmt.Errorf("failed to add person to db: %w", err)
-		} else {
+		if err == nil {
 			_, err := s.UpdatePerson(p.Id, p.Name)
 			if err != nil {
 				return fmt.Errorf("failed to update person in db: %w", err)
 			}
+			return nil
+		}
+
+		//If person is not in db, add it with a new id
+		if err != sql.ErrNoRows && err != redis.Nil {
+			return fmt.Errorf("failed to get person: %w", err)
+		}
+
+		if _, err = s.AddPerson(p.Name); err != nil {
+			return fmt.Errorf("failed to add person to db: %w", err)
 		}
 	}
 }
