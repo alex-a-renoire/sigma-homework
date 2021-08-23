@@ -23,8 +23,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type StorageServiceClient interface {
-	AddPerson(ctx context.Context, in *AddPersonRequest, opts ...grpc.CallOption) (*AddPersonResponse, error)
-	GetPerson(ctx context.Context, in *GetPersonRequest, opts ...grpc.CallOption) (*Person, error)
+	AddPerson(ctx context.Context, in *AddPersonRequest, opts ...grpc.CallOption) (*UUID, error)
+	GetPerson(ctx context.Context, in *UUID, opts ...grpc.CallOption) (*Person, error)
 	GetAllPersons(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*AllPersonsResponse, error)
 	UpdatePerson(ctx context.Context, in *Person, opts ...grpc.CallOption) (*empty.Empty, error)
 	DeletePerson(ctx context.Context, in *DeletePersonRequest, opts ...grpc.CallOption) (*empty.Empty, error)
@@ -38,8 +38,8 @@ func NewStorageServiceClient(cc grpc.ClientConnInterface) StorageServiceClient {
 	return &storageServiceClient{cc}
 }
 
-func (c *storageServiceClient) AddPerson(ctx context.Context, in *AddPersonRequest, opts ...grpc.CallOption) (*AddPersonResponse, error) {
-	out := new(AddPersonResponse)
+func (c *storageServiceClient) AddPerson(ctx context.Context, in *AddPersonRequest, opts ...grpc.CallOption) (*UUID, error) {
+	out := new(UUID)
 	err := c.cc.Invoke(ctx, "/grpcserver.StorageService/AddPerson", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -47,7 +47,7 @@ func (c *storageServiceClient) AddPerson(ctx context.Context, in *AddPersonReque
 	return out, nil
 }
 
-func (c *storageServiceClient) GetPerson(ctx context.Context, in *GetPersonRequest, opts ...grpc.CallOption) (*Person, error) {
+func (c *storageServiceClient) GetPerson(ctx context.Context, in *UUID, opts ...grpc.CallOption) (*Person, error) {
 	out := new(Person)
 	err := c.cc.Invoke(ctx, "/grpcserver.StorageService/GetPerson", in, out, opts...)
 	if err != nil {
@@ -87,8 +87,8 @@ func (c *storageServiceClient) DeletePerson(ctx context.Context, in *DeletePerso
 // All implementations must embed UnimplementedStorageServiceServer
 // for forward compatibility
 type StorageServiceServer interface {
-	AddPerson(context.Context, *AddPersonRequest) (*AddPersonResponse, error)
-	GetPerson(context.Context, *GetPersonRequest) (*Person, error)
+	AddPerson(context.Context, *AddPersonRequest) (*UUID, error)
+	GetPerson(context.Context, *UUID) (*Person, error)
 	GetAllPersons(context.Context, *empty.Empty) (*AllPersonsResponse, error)
 	UpdatePerson(context.Context, *Person) (*empty.Empty, error)
 	DeletePerson(context.Context, *DeletePersonRequest) (*empty.Empty, error)
@@ -99,10 +99,10 @@ type StorageServiceServer interface {
 type UnimplementedStorageServiceServer struct {
 }
 
-func (UnimplementedStorageServiceServer) AddPerson(context.Context, *AddPersonRequest) (*AddPersonResponse, error) {
+func (UnimplementedStorageServiceServer) AddPerson(context.Context, *AddPersonRequest) (*UUID, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddPerson not implemented")
 }
-func (UnimplementedStorageServiceServer) GetPerson(context.Context, *GetPersonRequest) (*Person, error) {
+func (UnimplementedStorageServiceServer) GetPerson(context.Context, *UUID) (*Person, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPerson not implemented")
 }
 func (UnimplementedStorageServiceServer) GetAllPersons(context.Context, *empty.Empty) (*AllPersonsResponse, error) {
@@ -146,7 +146,7 @@ func _StorageService_AddPerson_Handler(srv interface{}, ctx context.Context, dec
 }
 
 func _StorageService_GetPerson_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetPersonRequest)
+	in := new(UUID)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -158,7 +158,7 @@ func _StorageService_GetPerson_Handler(srv interface{}, ctx context.Context, dec
 		FullMethod: "/grpcserver.StorageService/GetPerson",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(StorageServiceServer).GetPerson(ctx, req.(*GetPersonRequest))
+		return srv.(StorageServiceServer).GetPerson(ctx, req.(*UUID))
 	}
 	return interceptor(ctx, in, info, handler)
 }

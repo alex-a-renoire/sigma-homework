@@ -117,7 +117,7 @@ func (s *HTTPHandler) GetPerson(w http.ResponseWriter, req *http.Request) {
 
 	//get the route variable ID of the person we want to retrieve
 	vars := mux.Vars(req)
-	id, err := uuid.FromBytes([]byte(vars["id"]))
+	id, err := uuid.Parse(vars["id"])
 	if err != nil {
 		s.reportError(w, err, BadRequestErr)
 		return
@@ -170,7 +170,7 @@ func (s *HTTPHandler) UpdatePerson(w http.ResponseWriter, req *http.Request) {
 
 	//get the route variable ID of the person we want to retrieve
 	vars := mux.Vars(req)
-	id, err := uuid.FromBytes([]byte(vars["id"]))
+	id, err := uuid.Parse(vars["id"])
 	if err != nil {
 		s.reportError(w, err, BadRequestErr)
 		return
@@ -206,7 +206,7 @@ func (s *HTTPHandler) DeletePerson(w http.ResponseWriter, req *http.Request) {
 
 	//get the route variable ID of the person we want to delete
 	vars := mux.Vars(req)
-	id, err := uuid.FromBytes([]byte(vars["id"]))
+	id, err := uuid.Parse(vars["id"])
 	if err != nil {
 		s.reportError(w, err, BadRequestErr)
 		return

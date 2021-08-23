@@ -25,7 +25,7 @@ func NewGRPC(db storage.Storage) *StorageServer {
 	}
 }
 
-func (ss *StorageServer) AddPerson(_ context.Context, in *pb.AddPersonRequest) (*pb.AddPersonResponse, error) {
+func (ss *StorageServer) AddPerson(_ context.Context, in *pb.AddPersonRequest) (*pb.UUID, error) {
 	log.Println("Add person command received...")
 	p := model.Person{
 		Name: in.Name,
@@ -36,17 +36,19 @@ func (ss *StorageServer) AddPerson(_ context.Context, in *pb.AddPersonRequest) (
 		return nil, fmt.Errorf("failed to add person: %w", err)
 	}
 
-	return &pb.AddPersonResponse{
-		Id: &pb.UUID{Value: id.String()},
+	return &pb.UUID{
+		Value: id.String(),
 	}, nil
 }
 
-func (ss *StorageServer) GetPerson(_ context.Context, in *pb.GetPersonRequest) (*pb.Person, error) {
+func (ss *StorageServer) GetPerson(_ context.Context, in *pb.UUID) (*pb.Person, error) {
 	log.Println("Get person command received...")
-	id, err := uuid.FromBytes([]byte(in.Id.String()))
+
+	id, err := uuid.Parse(in.Value)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert id to bytes: %w", err)
 	}
+
 	p, err := ss.DB.GetPerson(id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get person: %w", err)
@@ -80,15 +82,16 @@ func (ss *StorageServer) GetAllPersons(_ context.Context, in *emptypb.Empty) (*p
 }
 
 func (ss *StorageServer) UpdatePerson(_ context.Context, in *pb.Person) (*emptypb.Empty, error) {
-	person := model.Person{
-		Name: in.Name,
-	}
-
 	log.Println("Update person command received...")
 
-	id, err := uuid.FromBytes([]byte(in.Id.String()))
+	id, err := uuid.Parse(in.Id.Value)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert id to bytes: %w", err)
+	}
+
+	person := model.Person{
+		Id:   id,
+		Name: in.Name,
 	}
 
 	err = ss.DB.UpdatePerson(id, person)
@@ -102,7 +105,7 @@ func (ss *StorageServer) UpdatePerson(_ context.Context, in *pb.Person) (*emptyp
 func (ss *StorageServer) DeletePerson(_ context.Context, in *pb.DeletePersonRequest) (*emptypb.Empty, error) {
 	log.Println("Delete person command received...")
 
-	id, err := uuid.FromBytes([]byte(in.Id.String()))
+	id, err := uuid.Parse(in.Id.Value)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert id to bytes: %w", err)
 	}

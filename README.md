@@ -43,3 +43,5 @@ make httpserver
 
 - **REQUEST** http -v GET 127.0.0.1:8081/persons/dump
 - **REQUEST** 127.0.0.1:8081/persons/upload
+
+http -v GET 127.0.0.1:8081/persons/fe5f8020-5bcf-4f59-9deb-477f0f0f091e

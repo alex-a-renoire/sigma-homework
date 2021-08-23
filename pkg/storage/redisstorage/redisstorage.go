@@ -3,9 +3,6 @@ package redisstorage
 import (
 	"encoding/json"
 	"fmt"
-	"log"
-	"strconv"
-	"strings"
 
 	"github.com/alex-a-renoire/sigma-homework/model"
 	"github.com/go-redis/redis"
@@ -13,13 +10,11 @@ import (
 )
 
 type RDSdb struct {
-	currentPersonId int
-	Client          *redis.Client
+	Client *redis.Client
 }
 
 func NewRDS(addr string, pwd string, dbname int) *RDSdb {
 	return &RDSdb{
-		currentPersonId: 0,
 		Client: redis.NewClient(&redis.Options{
 			Addr:     addr,
 			Password: pwd,
@@ -29,34 +24,32 @@ func NewRDS(addr string, pwd string, dbname int) *RDSdb {
 }
 
 func (db *RDSdb) AddPerson(p model.Person) (uuid.UUID, error) {
+	p.Id = uuid.New()
+
 	person, err := json.Marshal(p)
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("Cannot add person to db: %w", err)
 	}
 
-	_, err = db.Client.Set("person:"+strconv.Itoa(db.currentPersonId), person, 0).Result()
+	_, err = db.Client.Set("person:"+p.Id.String(), person, 0).Result()
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("Cannot add person to db: %w", err)
 	}
 
-	return uuid.New(), nil
+	return p.Id, nil
 }
 
 func (db *RDSdb) GetPerson(id uuid.UUID) (model.Person, error) {
-	var person model.Person
-
-	res, err := db.Client.Get("person:" + id.String()).Result()
-
-	log.Print("Err: %w", err)
+	p, err := db.Client.Get("person:" + id.String()).Result()
 	if err != nil {
 		return model.Person{}, fmt.Errorf("failed to find person: %w", err)
 	}
 
-	if err = json.Unmarshal([]byte(res), &person); err != nil {
-		return model.Person{}, fmt.Errorf("Cannot retrieve person from db: %w", err)
-	}
+	var person model.Person
 
-	person.Id = id
+	if err := json.Unmarshal([]byte(p), &person); err != nil {
+		return model.Person{}, fmt.Errorf("Failed to marshal persons string: %w", err)
+	}
 
 	return person, nil
 }
@@ -73,17 +66,17 @@ func (db *RDSdb) GetAllPersons() ([]model.Person, error) {
 		var person model.Person
 		reply, err := db.Client.Get(k).Result()
 		if err != nil {
-			return nil, fmt.Errorf("Failed to retrieve persons from db: %w", err)
+			return nil, fmt.Errorf("Failed to retrieve person by key from db: %w", err)
 		}
 
 		if err := json.Unmarshal([]byte(reply), &person); err != nil {
-			return nil, fmt.Errorf("Failed to retrieve persons from db: %w", err)
+			return nil, fmt.Errorf("Failed to unmarshal persons string: %w", err)
 		}
 
-		person.Id, err = uuid.FromBytes([]byte(strings.TrimPrefix(k, "person:")))
-		if err != nil {
-			return nil, fmt.Errorf("malformed id or prefix: %w", err)
-		}
+		// person.Id, err = uuid.Parse(strings.TrimPrefix(k, "person:"))
+		// if err != nil {
+		// 	return nil, fmt.Errorf("malformed id or prefix: %w", err)
+		// }
 
 		persons = append(persons, person)
 	}
