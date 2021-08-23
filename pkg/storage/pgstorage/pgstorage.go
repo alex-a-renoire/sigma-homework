@@ -26,15 +26,12 @@ func New(addr string) (*PGPersonStorage, error) {
 }
 
 func (s *PGPersonStorage) AddPerson(p model.Person) (uuid.UUID, error) {
-	row := s.db.QueryRow("INSERT INTO persons(name) VALUES ($1) RETURNING id", p.Name)
-
-	var id int
-	err := row.Scan(&id)
-	if err != nil {
-		return uuid.UUID{}, fmt.Errorf("failed to add person to db")
+	id := uuid.New()
+	if _, err := s.db.Exec("INSERT INTO persons(id, name) VALUES ($1, $2)", id, p.Name); err != nil {
+		return uuid.UUID{}, fmt.Errorf("failed to add person to db: %w", err)
 	}
 
-	return uuid.New(), nil
+	return id, nil
 }
 
 func (s *PGPersonStorage) GetPerson(id uuid.UUID) (model.Person, error) {
