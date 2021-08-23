@@ -11,6 +11,7 @@ import (
 	"github.com/alex-a-renoire/sigma-homework/model"
 	"github.com/alex-a-renoire/sigma-homework/pkg/storage"
 	"github.com/alex-a-renoire/sigma-homework/service"
+	"github.com/google/uuid"
 )
 
 func TestHttpHandler(t *testing.T) {
@@ -40,8 +41,8 @@ func TestHttpHandler(t *testing.T) {
 			name: "POST /persons OK",
 			fields: fields{
 				s: storage.MockStorage{
-					MockAddPerson: func(_ string) (int, error) {
-						return 1, nil
+					MockAddPerson: func(_ string) (uuid.UUID, error) {
+						return uuid.New(), nil
 					},
 				},
 			},
@@ -56,8 +57,8 @@ func TestHttpHandler(t *testing.T) {
 			name: "POST /persons no name",
 			fields: fields{
 				s: storage.MockStorage{
-					MockAddPerson: func(_ string) (int, error) {
-						return 0, fmt.Errorf("failed to add person to db")
+					MockAddPerson: func(_ string) (uuid.UUID, error) {
+						return uuid.Nil, fmt.Errorf("failed to add person to db")
 					},
 				},
 			},
@@ -77,10 +78,10 @@ func TestHttpHandler(t *testing.T) {
 				s: storage.MockStorage{
 					MockGetAllPersons: func() ([]model.Person, error) {
 						return []model.Person{{
-							Id:   1,
+							Id:   uuid.New(),
 							Name: "John",
 						}, {
-							Id:   2,
+							Id:   uuid.New(),
 							Name: "Jane",
 						},
 						}, nil
@@ -100,9 +101,9 @@ func TestHttpHandler(t *testing.T) {
 			name: "Get /persons/1",
 			fields: fields{
 				s: storage.MockStorage{
-					MockGetPerson: func(_ int) (model.Person, error) {
+					MockGetPerson: func(_ uuid.UUID) (model.Person, error) {
 						return model.Person{
-							Id:   1,
+							Id:   uuid.New(),
 							Name: "John",
 						}, nil
 					},
@@ -121,7 +122,7 @@ func TestHttpHandler(t *testing.T) {
 			name: "UPDATE /persons/1 OK",
 			fields: fields{
 				s: storage.MockStorage{
-					MockUpdatePerson: func(_ int, p model.Person) error {
+					MockUpdatePerson: func(_ uuid.UUID, p model.Person) error {
 						return nil
 					},
 				},
@@ -139,7 +140,7 @@ func TestHttpHandler(t *testing.T) {
 			name: "DELETE /persons/1 OK",
 			fields: fields{
 				s: storage.MockStorage{
-					MockDeletePerson: func(_ int) error {
+					MockDeletePerson: func(_ uuid.UUID) error {
 						return nil
 					},
 				},
@@ -156,7 +157,7 @@ func TestHttpHandler(t *testing.T) {
 			name: "DELETE /persons/1 !OK",
 			fields: fields{
 				s: storage.MockStorage{
-					MockDeletePerson: func(_ int) error {
+					MockDeletePerson: func(_ uuid.UUID) error {
 						return fmt.Errorf("failed to delete")
 					},
 				},

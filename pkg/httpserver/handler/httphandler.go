@@ -1,20 +1,18 @@
 package httphandler
 
 import (
-	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"path/filepath"
-	"strconv"
 	"text/template"
 
 	"github.com/alex-a-renoire/sigma-homework/model"
 	"github.com/alex-a-renoire/sigma-homework/service"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/jszwec/csvutil"
 )
 
 type HTTPHandler struct {
@@ -119,7 +117,7 @@ func (s *HTTPHandler) GetPerson(w http.ResponseWriter, req *http.Request) {
 
 	//get the route variable ID of the person we want to retrieve
 	vars := mux.Vars(req)
-	id, err := strconv.Atoi(vars["id"])
+	id, err := uuid.Parse(vars["id"])
 	if err != nil {
 		s.reportError(w, err, BadRequestErr)
 		return
@@ -172,7 +170,7 @@ func (s *HTTPHandler) UpdatePerson(w http.ResponseWriter, req *http.Request) {
 
 	//get the route variable ID of the person we want to retrieve
 	vars := mux.Vars(req)
-	id, err := strconv.Atoi(vars["id"])
+	id, err := uuid.Parse(vars["id"])
 	if err != nil {
 		s.reportError(w, err, BadRequestErr)
 		return
@@ -208,7 +206,7 @@ func (s *HTTPHandler) DeletePerson(w http.ResponseWriter, req *http.Request) {
 
 	//get the route variable ID of the person we want to delete
 	vars := mux.Vars(req)
-	id, err := strconv.Atoi(vars["id"])
+	id, err := uuid.Parse(vars["id"])
 	if err != nil {
 		s.reportError(w, err, BadRequestErr)
 		return
@@ -232,15 +230,7 @@ func (s *HTTPHandler) DeletePerson(w http.ResponseWriter, req *http.Request) {
 func (s *HTTPHandler) DownloadPersonsCSV(w http.ResponseWriter, req *http.Request) {
 	log.Print("Command DownloadPersonsCSV received")
 
-	//Ask the service to process action
-	persons, err := s.service.GetAllPersons()
-	if err != nil {
-		s.reportError(w, err, InternalServerErr)
-		return
-	}
-
-	//Marshal persons into csv
-	ps, err := csvutil.Marshal(persons)
+	ps, err := s.service.DownloadPersonsCSV()
 	if err != nil {
 		s.reportError(w, err, InternalServerErr)
 		return
@@ -274,46 +264,12 @@ func (s *HTTPHandler) UploadPersonsCSV(w http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	//Parse CSV
-	//TODO: Replace readall to line by line reading
-	lines, err := csv.NewReader(file).ReadAll()
-	persons := []model.Person{}
-
-	for _, line := range lines[1:] {
-		id, err := strconv.Atoi(line[0])
-		if err != nil {
-			s.reportError(w, err, BadRequestErr)
-			return
-		}
-		p := model.Person{
-			Id:   id,
-			Name: line[1],
-		}
-
-		//If the person is not in db, add it with a new id,
-		_, err = s.service.GetPerson(p.Id)
-
-		//TOSO: if errors.Is(err, sql.ErrNoRows) add person. So far we assume any error as IsNil
-		if err != nil {
-			_, err = s.service.AddPerson(p.Name)
-		} else {
-			err := s.service.UpdatePerson(p.Id, p)
-			if err != nil {
-				s.reportError(w, err, InternalServerErr)
-				return
-			}
-		}
-
-		persons = append(persons, p)
+	if err := s.service.ProcessCSV(file); err != nil {
+		s.reportError(w, err, InternalServerErr)
+		return
 	}
 
-	// ps, err := json.Marshal(persons)
-	// if err != nil {
-	// 	s.reportError(w, err, InternalServerErr)
-	// 	return
-	// }
-	w.Header().Set("Content-Type", "application/json")
-	// w.Write(ps)
+	w.WriteHeader(http.StatusOK)
 }
 
 //////////////

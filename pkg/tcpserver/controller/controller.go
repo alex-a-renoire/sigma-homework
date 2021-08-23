@@ -5,6 +5,7 @@ import (
 
 	"github.com/alex-a-renoire/sigma-homework/model"
 	"github.com/alex-a-renoire/sigma-homework/service"
+	"github.com/google/uuid"
 )
 
 type PersonControllerTCP struct {
@@ -38,14 +39,14 @@ func (ps PersonControllerTCP) ProcessAction(action model.Action) (string, error)
 
 	switch action.FuncName {
 	case "AddPerson":
-		id, err := ps.FunctionMap["AddPerson"].(func(string) (int, error))(person.Name)
+		id, err := ps.FunctionMap["AddPerson"].(func(string) (uuid.UUID, error))(person.Name)
 		if err != nil {
 			response = fmt.Sprintf("error: %s \n", err)
 		} else {
 			response = fmt.Sprintf("Person with id %d and name %s added \n", id, person.Name)
 		}
 	case "GetPerson":
-		p, err := ps.FunctionMap["GetPerson"].(func(int) (model.Person, error))(person.Id)
+		p, err := ps.FunctionMap["GetPerson"].(func(uuid.UUID) (model.Person, error))(person.Id)
 		if err != nil {
 			response = fmt.Sprintf("error: %s \n", err)
 		} else {
@@ -59,7 +60,7 @@ func (ps PersonControllerTCP) ProcessAction(action model.Action) (string, error)
 			response = fmt.Sprintf("All persons in the storage are %v \n", p)
 		}
 	case "UpdatePerson":
-		p, err := ps.FunctionMap["UpdatePerson"].(func(int, string) (model.Person, error))(person.Id, person.Name)
+		p, err := ps.FunctionMap["UpdatePerson"].(func(uuid.UUID, string) (model.Person, error))(person.Id, person.Name)
 		if err != nil {
 			response = fmt.Sprintf("error: %s \n", err)
 		} else {
@@ -67,7 +68,7 @@ func (ps PersonControllerTCP) ProcessAction(action model.Action) (string, error)
 		}
 
 	case "DeletePerson":
-		if err := ps.FunctionMap["DeletePerson"].(func(int) error)(person.Id); err != nil {
+		if err := ps.FunctionMap["DeletePerson"].(func(uuid.UUID) error)(person.Id); err != nil {
 			response = fmt.Sprintf("error: %s \n", err)
 		} else {
 			response = fmt.Sprintf("Person with id %d deleted \n", person.Id)

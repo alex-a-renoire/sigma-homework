@@ -6,27 +6,24 @@ package grpcserver;
 import "google/protobuf/empty.proto";
 
 service StorageService {
-    rpc AddPerson(AddPersonRequest) returns (AddPersonResponse) {}
-    rpc GetPerson(GetPersonRequest) returns (Person) {}
+    rpc AddPerson(AddPersonRequest) returns (UUID) {}
+    rpc GetPerson(UUID) returns (Person) {}
     rpc GetAllPersons(google.protobuf.Empty) returns (AllPersonsResponse) {}
     rpc UpdatePerson(Person) returns (google.protobuf.Empty) {}
     rpc DeletePerson(DeletePersonRequest) returns (google.protobuf.Empty) {}
 } 
 
+
+message UUID {
+    string value = 1;
+}
+
 message AddPersonRequest {
     string name = 1;
 }
 
-message AddPersonResponse {
-    int32 id = 1;
-}
-
-message GetPersonRequest {
-    int32 id = 1;
-}
-
 message Person {
-    int32 id = 1;
+    UUID id = 1;
     string name = 2;
 }
 
@@ -35,5 +32,5 @@ message AllPersonsResponse {
 }
 
 message DeletePersonRequest {
-    int32 id = 1;
+    UUID id = 1;
 }
