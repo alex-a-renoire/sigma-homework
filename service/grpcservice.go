@@ -2,16 +2,16 @@ package service
 
 import (
 	"context"
-	"database/sql"
 	"encoding/csv"
-	"errors"
 	"fmt"
 	"io"
+	"log"
 	"mime/multipart"
 
-	"github.com/go-redis/redis"
 	"github.com/google/uuid"
 	"github.com/jszwec/csvutil"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/alex-a-renoire/sigma-homework/model"
@@ -49,9 +49,15 @@ func (s GRPCPersonService) GetPerson(id uuid.UUID) (model.Person, error) {
 		Value: id.String(),
 	})
 	if err != nil {
-		if errors.Is(err, redis.Nil) || errors.Is(err, sql.ErrNoRows) {
-			return model.Person{}, fmt.Errorf("no such record: %w", err)
+		st, ok := status.FromError(err)
+		if !ok {
+			return model.Person{}, fmt.Errorf("failed to get person, failed to parse status or not a grpc error type: %w", err)
 		}
+
+		if st.Code() == codes.NotFound {
+			return model.Person{}, model.ErrNotFound
+		}
+
 		return model.Person{}, fmt.Errorf("failed to get person: %w", err)
 	}
 
@@ -96,9 +102,15 @@ func (s GRPCPersonService) UpdatePerson(id uuid.UUID, person model.Person) error
 	})
 
 	if err != nil {
-		if errors.Is(err, redis.Nil) || errors.Is(err, sql.ErrNoRows) {
-			return fmt.Errorf("no such record: %w", err)
+		st, ok := status.FromError(err)
+		if !ok {
+			return fmt.Errorf("failed to get person, failed to parse status or not a grpc error type: %w", err)
 		}
+
+		if st.Code() == codes.NotFound {
+			return model.ErrNotFound
+		}
+
 		return fmt.Errorf("failed to get person: %w", err)
 	}
 
@@ -123,7 +135,16 @@ func (s GRPCPersonService) DeletePerson(id uuid.UUID) error {
 
 	//we assume error is sql.no rows
 	if err != nil {
-		return fmt.Errorf("there is no such person: %w", err)
+		st, ok := status.FromError(err)
+		if !ok {
+			return fmt.Errorf("failed to get person, failed to parse status or not a grpc error type: %w", err)
+		}
+
+		if st.Code() == codes.NotFound {
+			return model.ErrNotFound
+		}
+
+		return fmt.Errorf("failed to get person: %w", err)
 	}
 
 	_, err = s.remoteStorage.DeletePerson(context.Background(), &pb.DeletePersonRequest{
@@ -154,9 +175,9 @@ func (s GRPCPersonService) ProcessCSV(file multipart.File) error {
 				return fmt.Errorf("Error reading file: %w", err)
 			}
 			if i == 0 {
-				//if there's only headers and no values
-				return fmt.Errorf("Malformed csv file: %w", err)
+				return fmt.Errorf("Malformed csv file: there's only headers and no values")
 			} else {
+				log.Print("end of file")
 				//end of the file
 				return nil
 			}
@@ -167,11 +188,11 @@ func (s GRPCPersonService) ProcessCSV(file multipart.File) error {
 			return fmt.Errorf("Malformed csv file: wrong number of fields")
 		}
 		if record[0] == "" || record[1] == "" {
-			return fmt.Errorf("malformed csv file")
+			return fmt.Errorf("malformed csv file: empty fields")
 		}
-		id, err := uuid.FromBytes([]byte(record[0]))
+		id, err := uuid.Parse(record[0])
 		if err != nil {
-			return fmt.Errorf("malformed id, should be a number: %w", err)
+			return fmt.Errorf("malformed id, should be a uuid: %w", err)
 		}
 
 		p := model.Person{
@@ -180,21 +201,28 @@ func (s GRPCPersonService) ProcessCSV(file multipart.File) error {
 		}
 
 		//handle situation when there is such a record and we are updating
-		if _, err = s.GetPerson(p.Id); err == nil {
-			if err := s.UpdatePerson(p.Id, p); err != nil {
+		if _, err = s.remoteStorage.GetPerson(context.Background(), &pb.UUID{
+			Value: id.String(),
+		}); err == nil {
+			if err = s.UpdatePerson(p.Id, p); err != nil {
 				return fmt.Errorf("failed to update person in db: %w", err)
 			}
-			return nil
+			continue
 		}
 
-		//If person is not in db, add it with a new id
-		if errors.Is(err, sql.ErrNoRows) || errors.Is(err, redis.Nil) {
+		st, ok := status.FromError(err)
+		if !ok {
+			return fmt.Errorf("failed to get person, failed to parse status or not a grpc error type: %w", err)
+		}
+
+		if st.Code() == codes.NotFound {
 			if _, err = s.AddPerson(p.Name); err != nil {
 				return fmt.Errorf("failed to add person to db: %w", err)
 			}
+			continue
 		}
 
-		return fmt.Errorf("failed to get person: %w", err)
+		return fmt.Errorf("failed to process csv: %w", err)
 	}
 }
 
