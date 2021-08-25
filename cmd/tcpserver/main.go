@@ -34,7 +34,7 @@ func main() {
 	s := inmemory.New()
 
 	//create a service
-	service := service.NewDirect(s)
+	service := service.New(s)
 
 	//create a controller for transport layer
 	controller := tcpcontroller.New(service)

@@ -174,7 +174,7 @@ func TestHttpHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srv := service.NewDirect(tt.fields.s)
+			srv := service.New(tt.fields.s)
 
 			s := &HTTPHandler{
 				service: srv,
