@@ -41,6 +41,7 @@ func (s *PGPersonStorage) GetPerson(id uuid.UUID) (model.Person, error) {
 	if err := row.Scan(&p.Id, &p.Name); err != nil {
 		return model.Person{}, fmt.Errorf("failed to get person from db: %w", err)
 	}
+
 	return p, nil
 }
 

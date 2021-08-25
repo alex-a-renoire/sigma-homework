@@ -2,6 +2,8 @@ package grpcserver
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 
@@ -9,6 +11,8 @@ import (
 	pb "github.com/alex-a-renoire/sigma-homework/pkg/grpcserver/proto"
 	"github.com/alex-a-renoire/sigma-homework/pkg/storage"
 	"github.com/google/uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -33,7 +37,8 @@ func (ss *StorageServer) AddPerson(_ context.Context, in *pb.AddPersonRequest) (
 
 	id, err := ss.DB.AddPerson(p)
 	if err != nil {
-		return nil, fmt.Errorf("failed to add person: %w", err)
+		errStr := fmt.Sprintf("failed to add person: %s", err)
+		return nil, status.Error(codes.Internal, errStr)
 	}
 
 	return &pb.UUID{
@@ -46,12 +51,17 @@ func (ss *StorageServer) GetPerson(_ context.Context, in *pb.UUID) (*pb.Person, 
 
 	id, err := uuid.Parse(in.Value)
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert id to bytes: %w", err)
+		errStr := fmt.Sprintf("failed to parse uuid in grpc server: %s", err)
+		return nil, status.Error(codes.Internal, errStr)
 	}
 
 	p, err := ss.DB.GetPerson(id)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get person: %w", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, status.Error(codes.NotFound, "no rows found")
+		}
+		errStr := fmt.Sprintf("failed to get person in grpc server: %s", err)
+		return nil, status.Error(codes.Internal, errStr)
 	}
 
 	return &pb.Person{
@@ -64,7 +74,8 @@ func (ss *StorageServer) GetAllPersons(_ context.Context, in *emptypb.Empty) (*p
 	log.Println("Get all persons command received...")
 	persons, err := ss.DB.GetAllPersons()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get the list of persons: %w", err)
+		errStr := fmt.Sprintf("failed to get the list of persons: %s", err)
+		return nil, status.Error(codes.Internal, errStr)
 	}
 
 	pbPersons := []*pb.Person{}
@@ -86,7 +97,8 @@ func (ss *StorageServer) UpdatePerson(_ context.Context, in *pb.Person) (*emptyp
 
 	id, err := uuid.Parse(in.Id.Value)
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert id to bytes: %w", err)
+		errStr := fmt.Sprintf("failed to parse uuid: %s", err)
+		return nil, status.Error(codes.Internal, errStr)
 	}
 
 	person := model.Person{
@@ -96,7 +108,12 @@ func (ss *StorageServer) UpdatePerson(_ context.Context, in *pb.Person) (*emptyp
 
 	err = ss.DB.UpdatePerson(id, person)
 	if err != nil {
-		return &emptypb.Empty{}, fmt.Errorf("failed to update person: %w", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			status.Error(codes.NotFound, "no rows found")
+		}
+
+		errStr := fmt.Sprintf("failed to update person: %s", err)
+		return &emptypb.Empty{}, status.Error(codes.Internal, errStr)
 	}
 
 	return &emptypb.Empty{}, nil
@@ -107,10 +124,17 @@ func (ss *StorageServer) DeletePerson(_ context.Context, in *pb.DeletePersonRequ
 
 	id, err := uuid.Parse(in.Id.Value)
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert id to bytes: %w", err)
+		errStr := fmt.Sprintf("failed to parse uuid: %s", err)
+		return &emptypb.Empty{}, status.Error(codes.Internal, errStr)
 	}
+
 	if err := ss.DB.DeletePerson(id); err != nil {
-		return &emptypb.Empty{}, fmt.Errorf("failed to delete person: %w", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			status.Error(codes.NotFound, "no rows found")
+		}
+
+		errStr := fmt.Sprintf("failed to delete person: %s", err)
+		return &emptypb.Empty{}, status.Error(codes.Internal, errStr)
 	}
 	return &emptypb.Empty{}, nil
 }

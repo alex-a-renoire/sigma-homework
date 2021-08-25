@@ -1,5 +1,12 @@
 TODO:
  - On delete if no entity display error
- - add uuid to postgres and redis
  - validation in busines logic
- - add context to errors 
+ - add context to errors
+ - proxy for grpc and service
+ - помнить про лимиты - добавить таймауты на реквест
+
+ IN PROGRESS:
+ -CSV
+
+ DONE:
+ - add uuid to postgres and redis
