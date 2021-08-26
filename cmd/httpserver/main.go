@@ -38,7 +38,7 @@ func getCfg() config {
 		HTTPAddr = ":8081"
 	}
 
-	ConnType := os.Getenv("CONN_TYPE"){}
+	ConnType := os.Getenv("CONN_TYPE")
 	if ConnType == "" {
 		ConnType = "grpc"
 	}
@@ -80,7 +80,7 @@ func getCfg() config {
 
 	return config{
 		HTTPAddr:      HTTPAddr,
-		ConnType: 		ConnType,
+		ConnType:      ConnType,
 		GRPCAddr:      GRPCAddr,
 		DBType:        DBType,
 		PGAddress:     pgAddress,

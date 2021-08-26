@@ -29,8 +29,6 @@ func New(db pb.StorageServiceClient) GRPCСontroller {
 }
 
 func (s GRPCСontroller) AddPerson(p model.Person) (uuid.UUID, error) {
-	ctx :=
-
 	resp, err := s.remoteStorage.AddPerson(context.Background(), &pb.AddPersonRequest{
 		Name: p.Name,
 	})
@@ -220,7 +218,7 @@ func (s GRPCСontroller) ProcessCSV(file multipart.File) error {
 		}
 
 		if st.Code() == codes.NotFound {
-			if _, err = s.AddPerson(p.Name); err != nil {
+			if _, err = s.AddPerson(p); err != nil {
 				return fmt.Errorf("failed to add person to db: %w", err)
 			}
 			continue
