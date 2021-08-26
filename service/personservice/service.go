@@ -1,8 +1,6 @@
-package service
+package personservice
 
 import (
-	"mime/multipart"
-
 	"github.com/alex-a-renoire/sigma-homework/model"
 	"github.com/google/uuid"
 )
@@ -25,9 +23,9 @@ func New(db PersonStorage) PersonService {
 	}
 }
 
-func (s PersonService) AddPerson(name string) (uuid.UUID, error) {
+func (s PersonService) AddPerson(p model.Person) (uuid.UUID, error) {
 	return s.db.AddPerson(model.Person{
-		Name: name,
+		Name: p.Name,
 	})
 }
 
@@ -46,12 +44,4 @@ func (s PersonService) UpdatePerson(id uuid.UUID, p model.Person) error {
 
 func (s PersonService) DeletePerson(id uuid.UUID) error {
 	return s.db.DeletePerson(id)
-}
-
-func (s PersonService) DownloadPersonsCSV() ([]byte, error) {
-	return nil, nil
-}
-
-func (s PersonService) ProcessCSV(file multipart.File) error {
-	return nil
 }

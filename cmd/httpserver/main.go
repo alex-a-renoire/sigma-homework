@@ -9,16 +9,14 @@ import (
 	"strconv"
 	"syscall"
 
+	grpccontroller "github.com/alex-a-renoire/sigma-homework/pkg/grpcserver/controller"
 	pb "github.com/alex-a-renoire/sigma-homework/pkg/grpcserver/proto"
-	"github.com/alex-a-renoire/sigma-homework/pkg/storage"
+	httphandler "github.com/alex-a-renoire/sigma-homework/pkg/httpserver/handler"
 	"github.com/alex-a-renoire/sigma-homework/pkg/storage/pgstorage"
 	"github.com/alex-a-renoire/sigma-homework/pkg/storage/redisstorage"
+	"github.com/alex-a-renoire/sigma-homework/service/csvservice"
+	"github.com/alex-a-renoire/sigma-homework/service/personservice"
 	"google.golang.org/grpc"
-
-	grpccontroller "github.com/alex-a-renoire/sigma-homework/pkg/grpcserver/controller"
-	httphandler "github.com/alex-a-renoire/sigma-homework/pkg/httpserver/handler"
-
-	"github.com/alex-a-renoire/sigma-homework/service"
 )
 
 type config struct {
@@ -96,8 +94,10 @@ func main() {
 	//TODO: сделать слой контроллера - http или tcp - бизнес логика не должна меняться в зависимости от БД или GRPC
 	log.Printf("DB type:" + cfg.DBType)
 	//create storage
-	var storage storage.Storage
-	var err error
+	var (
+		storage personservice.PersonStorage
+		err     error
+	)
 
 	//create storage service
 	conn, err := grpc.Dial(cfg.GRPCAddr, grpc.WithInsecure())
@@ -122,10 +122,12 @@ func main() {
 	}
 
 	//create service with storage
-	service := service.New(storage)
+	personservice := personservice.New(storage)
+
+	csvservice := csvservice.New(personservice)
 
 	//create handler with controller
-	sh := httphandler.New(service)
+	sh := httphandler.New(personservice, *csvservice)
 
 	srv := http.Server{
 		Addr:    cfg.HTTPAddr,

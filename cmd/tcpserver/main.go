@@ -9,7 +9,7 @@ import (
 	"github.com/alex-a-renoire/sigma-homework/pkg/tcpserver"
 	tcpcontroller "github.com/alex-a-renoire/sigma-homework/pkg/tcpserver/controller"
 	"github.com/alex-a-renoire/sigma-homework/pkg/tcpserver/handler"
-	"github.com/alex-a-renoire/sigma-homework/service"
+	personservice "github.com/alex-a-renoire/sigma-homework/service/personservice"
 )
 
 type config struct {
@@ -34,7 +34,7 @@ func main() {
 	s := inmemory.New()
 
 	//create a service
-	service := service.New(s)
+	service := personservice.New(s)
 
 	//create a controller for transport layer
 	controller := tcpcontroller.New(service)

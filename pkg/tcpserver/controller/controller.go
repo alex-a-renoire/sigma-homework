@@ -4,16 +4,16 @@ import (
 	"fmt"
 
 	"github.com/alex-a-renoire/sigma-homework/model"
-	"github.com/alex-a-renoire/sigma-homework/service"
+	"github.com/alex-a-renoire/sigma-homework/service/personservice"
 	"github.com/google/uuid"
 )
 
 type PersonControllerTCP struct {
-	s           service.PersonService
+	s           personservice.PersonService
 	FunctionMap map[string]interface{}
 }
 
-func New(s service.PersonService) PersonControllerTCP {
+func New(s personservice.PersonService) PersonControllerTCP {
 	m := map[string]interface{}{
 		"AddPerson":     s.AddPerson,
 		"GetPerson":     s.GetPerson,
