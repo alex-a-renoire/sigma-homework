@@ -21,6 +21,7 @@ import (
 type HTTPHandler struct {
 	service      personservice.PersonService
 	csvprocessor csvservice.CsvProcessor
+	jwtSecret    []byte
 }
 
 func New(srv personservice.PersonService, csvprocessor csvservice.CsvProcessor) HTTPHandler {
@@ -42,7 +43,7 @@ func (s *HTTPHandler) GetRouter() *mux.Router {
 	router.HandleFunc("/persons/{id}", s.UpdatePerson).Methods("PUT")
 	router.HandleFunc("/persons/{id}", s.DeletePerson).Methods("DELETE")
 
-	router.Use(s.loggingMiddleware)
+	router.Use(s.authMiddleware)
 
 	return router
 }
@@ -276,13 +277,32 @@ func (s *HTTPHandler) UploadPersonsCSV(w http.ResponseWriter, req *http.Request)
 	w.WriteHeader(http.StatusOK)
 }
 
-//////////////
-//Middleware//
-//////////////
+///////
+//JWT//
+///////
 
-func (s *HTTPHandler) loggingMiddleware(next http.Handler) http.Handler {
+//TODO: invalidation
+
+func (s *HTTPHandler) Login(w http.ResponseWriter, req *http.Request) {
+	ba, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		s.reportError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	// ba, err := Login()
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(ba)
+}
+
+func (s *HTTPHandler) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println("Request received...")
+
+		//	tokenHeader := r.Header.Get("Authorization")
+
+		//	Authenticate(tokenHeader)
 		next.ServeHTTP(w, r)
 	})
 }

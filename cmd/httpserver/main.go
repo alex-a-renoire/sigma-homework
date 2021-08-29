@@ -28,6 +28,7 @@ type config struct {
 	RedisAddress  string
 	RedisPassword string
 	RedisDb       int
+	JWTSecret     string
 }
 
 func getCfg() config {
@@ -76,6 +77,11 @@ func getCfg() config {
 		DBType = "postgres"
 	}
 
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		jwtSecret = "not_really_secure_secret"
+	}
+
 	return config{
 		HTTPAddr:      HTTPAddr,
 		ConnType:      ConnType,
@@ -85,6 +91,7 @@ func getCfg() config {
 		RedisAddress:  redisAddress,
 		RedisPassword: redisPassword,
 		RedisDb:       db,
+		JWTSecret:     jwtSecret,
 	}
 }
 
