@@ -1,15 +1,10 @@
-package service
+package grpccontroller
 
 import (
 	"context"
-	"encoding/csv"
 	"fmt"
-	"io"
-	"log"
-	"mime/multipart"
 
 	"github.com/google/uuid"
-	"github.com/jszwec/csvutil"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -18,20 +13,21 @@ import (
 	pb "github.com/alex-a-renoire/sigma-homework/pkg/grpcserver/proto"
 )
 
-type GRPCPersonService struct {
+type GRPCСontroller struct {
 	remoteStorage pb.StorageServiceClient
 }
 
-func NewGRPC(db pb.StorageServiceClient) GRPCPersonService {
-	return GRPCPersonService{
+func New(db pb.StorageServiceClient) GRPCСontroller {
+	return GRPCСontroller{
 		remoteStorage: db,
 	}
 }
 
-func (s GRPCPersonService) AddPerson(name string) (uuid.UUID, error) {
+func (s GRPCСontroller) AddPerson(p model.Person) (uuid.UUID, error) {
 	resp, err := s.remoteStorage.AddPerson(context.Background(), &pb.AddPersonRequest{
-		Name: name,
+		Name: p.Name,
 	})
+
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("failed to add person: %w", err)
 	}
@@ -44,14 +40,14 @@ func (s GRPCPersonService) AddPerson(name string) (uuid.UUID, error) {
 	return id, nil
 }
 
-func (s GRPCPersonService) GetPerson(id uuid.UUID) (model.Person, error) {
+func (s GRPCСontroller) GetPerson(id uuid.UUID) (model.Person, error) {
 	p, err := s.remoteStorage.GetPerson(context.Background(), &pb.UUID{
 		Value: id.String(),
 	})
 	if err != nil {
 		st, ok := status.FromError(err)
 		if !ok {
-			return model.Person{}, fmt.Errorf("failed to get person, failed to parse status or not a grpc error type: %w", err)
+			return model.Person{}, fmt.Errorf("failed to get person in grpc controller, failed to parse status or not a grpc error type: %w", model.ErrNotFound)
 		}
 
 		if st.Code() == codes.NotFound {
@@ -72,7 +68,7 @@ func (s GRPCPersonService) GetPerson(id uuid.UUID) (model.Person, error) {
 	}, nil
 }
 
-func (s GRPCPersonService) GetAllPersons() ([]model.Person, error) {
+func (s GRPCСontroller) GetAllPersons() ([]model.Person, error) {
 	resp, err := s.remoteStorage.GetAllPersons(context.Background(), &emptypb.Empty{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch persons: %w", err)
@@ -95,7 +91,7 @@ func (s GRPCPersonService) GetAllPersons() ([]model.Person, error) {
 	return persons, nil
 }
 
-func (s GRPCPersonService) UpdatePerson(id uuid.UUID, person model.Person) error {
+func (s GRPCСontroller) UpdatePerson(id uuid.UUID, person model.Person) error {
 	//Check if there is such a person
 	_, err := s.remoteStorage.GetPerson(context.Background(), &pb.UUID{
 		Value: id.String(),
@@ -127,7 +123,7 @@ func (s GRPCPersonService) UpdatePerson(id uuid.UUID, person model.Person) error
 	return nil
 }
 
-func (s GRPCPersonService) DeletePerson(id uuid.UUID) error {
+func (s GRPCСontroller) DeletePerson(id uuid.UUID) error {
 	//Check if there is such a person
 	_, err := s.remoteStorage.GetPerson(context.Background(), &pb.UUID{
 		Value: id.String(),
@@ -156,87 +152,4 @@ func (s GRPCPersonService) DeletePerson(id uuid.UUID) error {
 	}
 
 	return nil
-}
-
-///////
-//CSV//
-///////
-
-func (s GRPCPersonService) ProcessCSV(file multipart.File) error {
-	//Parse CSV
-	reader := csv.NewReader(file)
-	reader.Read()
-
-	//loop of reading
-	for i := 0; ; i++ {
-		record, err := reader.Read()
-		if err != nil {
-			if err != io.EOF {
-				return fmt.Errorf("Error reading file: %w", err)
-			}
-			if i == 0 {
-				return fmt.Errorf("Malformed csv file: there's only headers and no values")
-			} else {
-				log.Print("end of file")
-				//end of the file
-				return nil
-			}
-		}
-
-		//malformed csv handling
-		if len(record) != 2 {
-			return fmt.Errorf("Malformed csv file: wrong number of fields")
-		}
-		if record[0] == "" || record[1] == "" {
-			return fmt.Errorf("malformed csv file: empty fields")
-		}
-		id, err := uuid.Parse(record[0])
-		if err != nil {
-			return fmt.Errorf("malformed id, should be a uuid: %w", err)
-		}
-
-		p := model.Person{
-			Id:   id,
-			Name: record[1],
-		}
-
-		//handle situation when there is such a record and we are updating
-		if _, err = s.remoteStorage.GetPerson(context.Background(), &pb.UUID{
-			Value: id.String(),
-		}); err == nil {
-			if err = s.UpdatePerson(p.Id, p); err != nil {
-				return fmt.Errorf("failed to update person in db: %w", err)
-			}
-			continue
-		}
-
-		st, ok := status.FromError(err)
-		if !ok {
-			return fmt.Errorf("failed to get person, failed to parse status or not a grpc error type: %w", err)
-		}
-
-		if st.Code() == codes.NotFound {
-			if _, err = s.AddPerson(p.Name); err != nil {
-				return fmt.Errorf("failed to add person to db: %w", err)
-			}
-			continue
-		}
-
-		return fmt.Errorf("failed to process csv: %w", err)
-	}
-}
-
-func (s GRPCPersonService) DownloadPersonsCSV() ([]byte, error) {
-	//Ask the service to process action
-	persons, err := s.GetAllPersons()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get all persons from db: %w", err)
-	}
-
-	//Marshal persons into csv
-	ps, err := csvutil.Marshal(persons)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal persons: %w", err)
-	}
-	return ps, nil
 }

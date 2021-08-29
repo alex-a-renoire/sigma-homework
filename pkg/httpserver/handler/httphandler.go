@@ -10,18 +10,23 @@ import (
 	"text/template"
 
 	"github.com/alex-a-renoire/sigma-homework/model"
-	"github.com/alex-a-renoire/sigma-homework/service"
+	"github.com/alex-a-renoire/sigma-homework/service/csvservice"
+	"github.com/alex-a-renoire/sigma-homework/service/personservice"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
+//TODO: write a local interface
+
 type HTTPHandler struct {
-	service service.PersonService
+	service      personservice.PersonService
+	csvprocessor csvservice.CsvProcessor
 }
 
-func New(service service.PersonService) HTTPHandler {
+func New(srv personservice.PersonService, csvprocessor csvservice.CsvProcessor) HTTPHandler {
 	return HTTPHandler{
-		service: service,
+		service:      srv,
+		csvprocessor: csvprocessor,
 	}
 }
 
@@ -91,7 +96,7 @@ func (s *HTTPHandler) AddPerson(w http.ResponseWriter, req *http.Request) {
 	}
 
 	//send the appropriate action to service
-	id, err := s.service.AddPerson(person.Name)
+	id, err := s.service.AddPerson(person)
 	if err != nil {
 		s.reportError(w, err, InternalServerErr)
 		return
@@ -230,7 +235,7 @@ func (s *HTTPHandler) DeletePerson(w http.ResponseWriter, req *http.Request) {
 func (s *HTTPHandler) DownloadPersonsCSV(w http.ResponseWriter, req *http.Request) {
 	log.Print("Command DownloadPersonsCSV received")
 
-	ps, err := s.service.DownloadPersonsCSV()
+	ps, err := s.csvprocessor.DownloadPersonsCSV()
 	if err != nil {
 		s.reportError(w, err, InternalServerErr)
 		return
@@ -255,7 +260,6 @@ func (s *HTTPHandler) RenderTemplate(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 }
 
-//TODO отделить бизнес логику от транспортного слоя
 func (s *HTTPHandler) UploadPersonsCSV(w http.ResponseWriter, req *http.Request) {
 	//Read a file from the form
 	file, _, err := req.FormFile("uploadfile")
@@ -264,7 +268,7 @@ func (s *HTTPHandler) UploadPersonsCSV(w http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	if err := s.service.ProcessCSV(file); err != nil {
+	if err := s.csvprocessor.ProcessCSV(file); err != nil {
 		s.reportError(w, err, InternalServerErr)
 		return
 	}

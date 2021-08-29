@@ -81,22 +81,18 @@ func main() {
 
 	//TODO: сделать слой контроллера - http или tcp - бизнес логика не должна меняться в зависимости от БД или GRPC
 	log.Print(cfg.DBType)
+
 	//create storage
 	var db storage.Storage
 	switch cfg.DBType {
 	case "postgres":
-		log.Print("using postgres")
 		db, err = pgstorage.New(cfg.PGAddress)
 		if err != nil {
 			log.Printf("failed to connect to db: %s", err)
 			return
 		}
 	case "redis":
-		log.Print("using redis")
 		db = redisstorage.NewRDS(cfg.RedisAddress, cfg.RedisPassword, cfg.RedisDb)
-		log.Print("redis")
-		log.Print(db)
-
 	}
 
 	//create GRPC server

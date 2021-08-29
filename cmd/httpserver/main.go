@@ -6,18 +6,28 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 
+	grpccontroller "github.com/alex-a-renoire/sigma-homework/pkg/grpcserver/controller"
 	pb "github.com/alex-a-renoire/sigma-homework/pkg/grpcserver/proto"
-	"google.golang.org/grpc"
-
 	httphandler "github.com/alex-a-renoire/sigma-homework/pkg/httpserver/handler"
-	"github.com/alex-a-renoire/sigma-homework/service"
+	"github.com/alex-a-renoire/sigma-homework/pkg/storage/pgstorage"
+	"github.com/alex-a-renoire/sigma-homework/pkg/storage/redisstorage"
+	"github.com/alex-a-renoire/sigma-homework/service/csvservice"
+	"github.com/alex-a-renoire/sigma-homework/service/personservice"
+	"google.golang.org/grpc"
 )
 
 type config struct {
-	HTTPAddr string
-	GRPCAddr string
+	HTTPAddr      string
+	ConnType      string
+	GRPCAddr      string
+	DBType        string
+	PGAddress     string
+	RedisAddress  string
+	RedisPassword string
+	RedisDb       int
 }
 
 func getCfg() config {
@@ -26,19 +36,68 @@ func getCfg() config {
 		HTTPAddr = ":8081"
 	}
 
+	ConnType := os.Getenv("CONN_TYPE")
+	if ConnType == "" {
+		ConnType = "grpc"
+	}
+
 	GRPCAddr := os.Getenv("HTTP_GRPC_ADDRESS")
 	if GRPCAddr == "" {
 		GRPCAddr = ":50051"
 	}
 
+	pgAddress := os.Getenv("PG_ADDRESS")
+	if pgAddress == "" {
+		pgAddress = "host=db port=5432 dbname=persons user=persons password=pass sslmode=disable"
+	}
+
+	redisAddress := os.Getenv("REDIS_ADDRESS")
+	if redisAddress == "" {
+		redisAddress = "127.0.0.1:6379"
+	}
+
+	redisPassword := os.Getenv("REDIS_PASSWORD")
+
+	var (
+		db  int
+		err error
+	)
+	redisDb := os.Getenv("REDIS_DB")
+	if redisDb != "" {
+		db, err = strconv.Atoi(redisDb)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	//possible values: postgres, redis, mongo
+	DBType := os.Getenv("DB_TYPE")
+	if DBType == "" {
+		DBType = "postgres"
+	}
+
 	return config{
-		HTTPAddr: HTTPAddr,
-		GRPCAddr: GRPCAddr,
+		HTTPAddr:      HTTPAddr,
+		ConnType:      ConnType,
+		GRPCAddr:      GRPCAddr,
+		DBType:        DBType,
+		PGAddress:     pgAddress,
+		RedisAddress:  redisAddress,
+		RedisPassword: redisPassword,
+		RedisDb:       db,
 	}
 }
 
 func main() {
 	cfg := getCfg()
+
+	//TODO: сделать слой контроллера - http или tcp - бизнес логика не должна меняться в зависимости от БД или GRPC
+	log.Printf("DB type:" + cfg.DBType)
+	//create storage
+	var (
+		storage personservice.PersonStorage
+		err     error
+	)
 
 	//create storage service
 	conn, err := grpc.Dial(cfg.GRPCAddr, grpc.WithInsecure())
@@ -47,13 +106,28 @@ func main() {
 	}
 	defer conn.Close()
 
-	storageClient := pb.NewStorageServiceClient(conn)
+	if cfg.ConnType == "direct" {
+		switch cfg.DBType {
+		case "postgres":
+			storage, err = pgstorage.New(cfg.PGAddress)
+			if err != nil {
+				log.Printf("failed to connect to db: %s", err)
+				return
+			}
+		case "redis":
+			storage = redisstorage.NewRDS(cfg.RedisAddress, cfg.RedisPassword, cfg.RedisDb)
+		}
+	} else if cfg.ConnType == "grpc" {
+		storage = grpccontroller.New(pb.NewStorageServiceClient(conn))
+	}
 
 	//create service with storage
-	service := service.NewGRPC(storageClient)
+	personservice := personservice.New(storage)
+
+	csvservice := csvservice.New(personservice)
 
 	//create handler with controller
-	sh := httphandler.New(service)
+	sh := httphandler.New(personservice, *csvservice)
 
 	srv := http.Server{
 		Addr:    cfg.HTTPAddr,
