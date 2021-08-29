@@ -42,13 +42,12 @@ func (s GRPCСontroller) AddPerson(p model.Person) (uuid.UUID, error) {
 
 func (s GRPCСontroller) GetPerson(id uuid.UUID) (model.Person, error) {
 	p, err := s.remoteStorage.GetPerson(context.Background(), &pb.UUID{
-
 		Value: id.String(),
 	})
 	if err != nil {
 		st, ok := status.FromError(err)
 		if !ok {
-			return model.Person{}, fmt.Errorf("failed to get person, failed to parse status or not a grpc error type: %w", err)
+			return model.Person{}, fmt.Errorf("failed to get person in grpc controller, failed to parse status or not a grpc error type: %w", model.ErrNotFound)
 		}
 
 		if st.Code() == codes.NotFound {

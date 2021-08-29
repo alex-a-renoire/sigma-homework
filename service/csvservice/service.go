@@ -2,6 +2,7 @@ package csvservice
 
 import (
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -10,8 +11,6 @@ import (
 	"github.com/alex-a-renoire/sigma-homework/model"
 	"github.com/google/uuid"
 	"github.com/jszwec/csvutil"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type PersonService interface {
@@ -93,12 +92,7 @@ func (cp CsvProcessor) ProcessCSV(file multipart.File) error {
 			continue
 		}
 
-		st, ok := status.FromError(err)
-		if !ok {
-			return fmt.Errorf("failed to get person, failed to parse status or not a grpc error type: %w", err)
-		}
-
-		if st.Code() == codes.NotFound {
+		if errors.Is(err, model.ErrNotFound) {
 			if _, err = cp.srv.AddPerson(p); err != nil {
 				return fmt.Errorf("failed to add person to db: %w", err)
 			}
