@@ -12,6 +12,7 @@ import (
 	grpccontroller "github.com/alex-a-renoire/sigma-homework/pkg/grpcserver/controller"
 	pb "github.com/alex-a-renoire/sigma-homework/pkg/grpcserver/proto"
 	httphandler "github.com/alex-a-renoire/sigma-homework/pkg/httpserver/handler"
+	"github.com/alex-a-renoire/sigma-homework/pkg/storage/mongostorage"
 	"github.com/alex-a-renoire/sigma-homework/pkg/storage/pgstorage"
 	"github.com/alex-a-renoire/sigma-homework/pkg/storage/redisstorage"
 	"github.com/alex-a-renoire/sigma-homework/service/csvservice"
@@ -28,6 +29,9 @@ type config struct {
 	RedisAddress  string
 	RedisPassword string
 	RedisDb       int
+	MongoAddress  string
+	MongoUser     string
+	MongoPassword string
 }
 
 func getCfg() config {
@@ -62,6 +66,7 @@ func getCfg() config {
 		db  int
 		err error
 	)
+
 	redisDb := os.Getenv("REDIS_DB")
 	if redisDb != "" {
 		db, err = strconv.Atoi(redisDb)
@@ -70,10 +75,25 @@ func getCfg() config {
 		}
 	}
 
+	mongoAddress := os.Getenv("MONGO_ADDRESS")
+	if mongoAddress == "" {
+		mongoAddress = ":27017"
+	}
+
+	mongoUser := os.Getenv("MONGO_INITDB_ROOT_USERNAME")
+	if mongoUser == "" {
+		mongoUser = "sigma-intern"
+	}
+
+	mongoPassword := os.Getenv("MONGO_INITDB_ROOT_PASSWORD")
+	if mongoPassword == "" {
+		mongoPassword = "sigma"
+	}
+
 	//possible values: postgres, redis, mongo
 	DBType := os.Getenv("DB_TYPE")
 	if DBType == "" {
-		DBType = "postgres"
+		DBType = "mongo"
 	}
 
 	return config{
@@ -85,26 +105,22 @@ func getCfg() config {
 		RedisAddress:  redisAddress,
 		RedisPassword: redisPassword,
 		RedisDb:       db,
+		MongoAddress:  mongoAddress,
+		MongoUser:     mongoUser,
+		MongoPassword: mongoPassword,
 	}
 }
 
 func main() {
 	cfg := getCfg()
 
-	//TODO: сделать слой контроллера - http или tcp - бизнес логика не должна меняться в зависимости от БД или GRPC
 	log.Printf("DB type:" + cfg.DBType)
+
 	//create storage
 	var (
 		storage personservice.PersonStorage
 		err     error
 	)
-
-	//create storage service
-	conn, err := grpc.Dial(cfg.GRPCAddr, grpc.WithInsecure())
-	if err != nil {
-		log.Fatalf("did not connect: %v", err)
-	}
-	defer conn.Close()
 
 	if cfg.ConnType == "direct" {
 		switch cfg.DBType {
@@ -116,8 +132,21 @@ func main() {
 			}
 		case "redis":
 			storage = redisstorage.NewRDS(cfg.RedisAddress, cfg.RedisPassword, cfg.RedisDb)
+		case "mongo":
+			storage, err = mongostorage.New(cfg.MongoAddress, cfg.MongoUser, cfg.MongoPassword)
+			if err != nil {
+				log.Printf("failed to connect to db: %s", err)
+				return
+			}
 		}
 	} else if cfg.ConnType == "grpc" {
+		//create storage service
+		conn, err := grpc.Dial(cfg.GRPCAddr, grpc.WithInsecure())
+		if err != nil {
+			log.Fatalf("did not connect to grpc: %v", err)
+		}
+		defer conn.Close()
+
 		storage = grpccontroller.New(pb.NewStorageServiceClient(conn))
 	}
 

@@ -6,7 +6,10 @@ TODO:
  - помнить про лимиты - добавить таймауты на реквест
 
  IN PROGRESS:
- -CSV
+ - JWT
+ - check if csv works fine with mongo
 
  DONE:
  - add uuid to postgres and redis
+ - CSV
+ - MONGO
