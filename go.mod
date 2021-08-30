@@ -11,6 +11,7 @@ require (
 	github.com/jszwec/csvutil v1.5.0
 	github.com/lib/pq v1.10.2
 	github.com/onsi/gomega v1.16.0 // indirect
+	go.mongodb.org/mongo-driver v1.7.1
 	google.golang.org/grpc v1.39.0
 	google.golang.org/protobuf v1.27.1
 )

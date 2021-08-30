@@ -7,8 +7,8 @@ import (
 )
 
 type Person struct {
-	Id   uuid.UUID `json:"id,omitempty" csv:"id, omitempty"`
-	Name string    `json:"name,omitempty" csv:"name"`
+	Id   uuid.UUID `json:"id,omitempty" csv:"id, omitempty" bson:"_id,omitempty"`
+	Name string    `json:"name,omitempty" csv:"name" bson:"name,omitempty"`
 }
 
 func (p *Person) String() string {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"github.com/alex-a-renoire/sigma-homework/pkg/grpcserver"
 	pb "github.com/alex-a-renoire/sigma-homework/pkg/grpcserver/proto"
 	"github.com/alex-a-renoire/sigma-homework/pkg/storage"
+	"github.com/alex-a-renoire/sigma-homework/pkg/storage/mongostorage"
 	"github.com/alex-a-renoire/sigma-homework/pkg/storage/pgstorage"
 	"github.com/alex-a-renoire/sigma-homework/pkg/storage/redisstorage"
 	"google.golang.org/grpc"
@@ -21,6 +23,9 @@ type config struct {
 	RedisAddress  string
 	RedisPassword string
 	RedisDb       int
+	MongoAddress  string
+	MongoUser     string
+	MongoPassword string
 }
 
 func getOsVars() *config {
@@ -53,6 +58,21 @@ func getOsVars() *config {
 		}
 	}
 
+	mongoAddress := os.Getenv("MONGO_ADDRESS")
+	if mongoAddress == "" {
+		mongoAddress = ":27017"
+	}
+
+	mongoUser := os.Getenv("MONGO_INITDB_ROOT_USERNAME")
+	if mongoUser == "" {
+		mongoUser = "sigma-intern"
+	}
+
+	mongoPassword := os.Getenv("MONGO_INITDB_ROOT_PASSWORD")
+	if mongoPassword == "" {
+		mongoPassword = "sigma"
+	}
+
 	//possible values: postgres, redis, mongo
 	DBType := os.Getenv("DB_TYPE")
 	if DBType == "" {
@@ -66,6 +86,9 @@ func getOsVars() *config {
 		RedisAddress:  redisAddress,
 		RedisPassword: redisPassword,
 		RedisDb:       db,
+		MongoAddress:  mongoAddress,
+		MongoUser:     mongoUser,
+		MongoPassword: mongoPassword,
 	}
 }
 
@@ -88,11 +111,15 @@ func main() {
 	case "postgres":
 		db, err = pgstorage.New(cfg.PGAddress)
 		if err != nil {
-			log.Printf("failed to connect to db: %s", err)
-			return
+			log.Fatal(fmt.Sprintf("failed to connect to db: %s", err))
 		}
 	case "redis":
 		db = redisstorage.NewRDS(cfg.RedisAddress, cfg.RedisPassword, cfg.RedisDb)
+	case "mongo":
+		db, err = mongostorage.New(cfg.MongoAddress, cfg.MongoUser, cfg.MongoPassword)
+		if err != nil {
+			log.Fatal(fmt.Sprintf("failed to connect to db: %s", err))
+		}
 	}
 
 	//create GRPC server
