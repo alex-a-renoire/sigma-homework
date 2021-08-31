@@ -1,6 +1,7 @@
 package httphandler
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -89,7 +90,7 @@ func (s *HTTPHandler) AddPerson(w http.ResponseWriter, req *http.Request) {
 	}
 
 	//Unmarshal person
-	person := model.Person{}
+	person := model.AddUpdatePerson{}
 	if err = json.Unmarshal(p, &person); err != nil {
 		s.reportError(w, err, BadRequestErr)
 		return
@@ -189,7 +190,7 @@ func (s *HTTPHandler) UpdatePerson(w http.ResponseWriter, req *http.Request) {
 	}
 
 	//unmarshal person
-	person := model.Person{}
+	person := model.AddUpdatePerson{}
 	if err = json.Unmarshal(p, &person); err != nil {
 		s.reportError(w, err, BadRequestErr)
 		return
@@ -268,7 +269,7 @@ func (s *HTTPHandler) UploadPersonsCSV(w http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	if err := s.csvprocessor.ProcessCSV(file); err != nil {
+	if err := s.csvprocessor.ProcessCSV(*csv.NewReader(file)); err != nil {
 		s.reportError(w, err, InternalServerErr)
 		return
 	}

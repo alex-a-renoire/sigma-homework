@@ -16,8 +16,8 @@ func (p *Person) String() string {
 }
 
 func (p *Person) Validate() error {
-	if p.Id == uuid.Nil && p.Name == "" {
-		return fmt.Errorf("person name and id are not specified. At least one of the two should be specified")
+	if p.Id == uuid.Nil || p.Name == "" {
+		return fmt.Errorf("person name or id are not specified. At least one of the two should be specified")
 	}
 	return nil
 }
