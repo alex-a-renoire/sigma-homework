@@ -41,7 +41,7 @@ func TestHttpHandler(t *testing.T) {
 			name: "POST /persons OK",
 			fields: fields{
 				s: storage.MockStorage{
-					MockAddPerson: func(_ string) (uuid.UUID, error) {
+					MockAddPerson: func(_ model.Person) (uuid.UUID, error) {
 						return uuid.New(), nil
 					},
 				},
@@ -57,7 +57,7 @@ func TestHttpHandler(t *testing.T) {
 			name: "POST /persons no name",
 			fields: fields{
 				s: storage.MockStorage{
-					MockAddPerson: func(_ string) (uuid.UUID, error) {
+					MockAddPerson: func(_ model.Person) (uuid.UUID, error) {
 						return uuid.Nil, fmt.Errorf("failed to add person to db")
 					},
 				},

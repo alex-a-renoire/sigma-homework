@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"mime/multipart"
 
 	"github.com/alex-a-renoire/sigma-homework/model"
 	"github.com/google/uuid"
@@ -14,10 +13,10 @@ import (
 )
 
 type PersonService interface {
-	AddPerson(p model.Person) (uuid.UUID, error)
+	AddPerson(p model.AddUpdatePerson) (uuid.UUID, error)
 	GetPerson(id uuid.UUID) (model.Person, error)
 	GetAllPersons() ([]model.Person, error)
-	UpdatePerson(id uuid.UUID, person model.Person) error
+	UpdatePerson(id uuid.UUID, person model.AddUpdatePerson) error
 	DeletePerson(id uuid.UUID) error
 }
 
@@ -46,10 +45,11 @@ func (cp CsvProcessor) DownloadPersonsCSV() ([]byte, error) {
 	return ps, nil
 }
 
-func (cp CsvProcessor) ProcessCSV(file multipart.File) error {
+func (cp CsvProcessor) ProcessCSV(reader csv.Reader) error {
 	//Parse CSV
-	reader := csv.NewReader(file)
-	reader.Read()
+	if _, err := reader.Read(); err == io.EOF {
+		return fmt.Errorf("error: empty file")
+	}
 
 	//loop of reading
 	for i := 0; ; i++ {
@@ -86,14 +86,18 @@ func (cp CsvProcessor) ProcessCSV(file multipart.File) error {
 
 		//handle situation when there is such a record and we are updating
 		if _, err = cp.srv.GetPerson(id); err == nil {
-			if err = cp.srv.UpdatePerson(p.Id, p); err != nil {
+			if err = cp.srv.UpdatePerson(p.Id, model.AddUpdatePerson{
+				Name: p.Name,
+			}); err != nil {
 				return fmt.Errorf("failed to update person in db: %w", err)
 			}
 			continue
 		}
 
 		if errors.Is(err, model.ErrNotFound) {
-			if _, err = cp.srv.AddPerson(p); err != nil {
+			if _, err = cp.srv.AddPerson(model.AddUpdatePerson{
+				Name: p.Name,
+			}); err != nil {
 				return fmt.Errorf("failed to add person to db: %w", err)
 			}
 			continue

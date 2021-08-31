@@ -8,7 +8,7 @@ import (
 var _ Storage = MockStorage{}
 
 type MockStorage struct {
-	MockAddPerson     func(name string) (uuid.UUID, error)
+	MockAddPerson     func(p model.Person) (uuid.UUID, error)
 	MockGetPerson     func(id uuid.UUID) (model.Person, error)
 	MockGetAllPersons func() ([]model.Person, error)
 	MockUpdatePerson  func(id uuid.UUID, person model.Person) error
@@ -16,7 +16,7 @@ type MockStorage struct {
 }
 
 func (m MockStorage) AddPerson(p model.Person) (uuid.UUID, error) {
-	return m.MockAddPerson(p.Name)
+	return m.MockAddPerson(p)
 }
 
 func (m MockStorage) GetPerson(id uuid.UUID) (model.Person, error) {
