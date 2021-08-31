@@ -2,6 +2,10 @@
 all: 
 	cd docker; docker-compose build && docker-compose up
 
+.PHONY: all-mongo
+all-mongo: 
+	cd docker; docker-compose build && docker-compose --profile mongo up
+
 .PHONY: tcpserver 
 tcpserver:
 	export TCP_ADDR=127.0.0.1:8080

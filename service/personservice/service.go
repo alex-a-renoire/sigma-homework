@@ -24,6 +24,7 @@ func New(db PersonStorage) PersonService {
 }
 
 func (s PersonService) AddPerson(p model.Person) (uuid.UUID, error) {
+	p.Validate()
 	return s.db.AddPerson(model.Person{
 		Name: p.Name,
 	})

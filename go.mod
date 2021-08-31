@@ -3,6 +3,7 @@ module github.com/alex-a-renoire/sigma-homework
 go 1.16
 
 require (
+	github.com/cweill/gotests v1.6.0 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/golang/protobuf v1.5.2
