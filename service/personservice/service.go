@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/alex-a-renoire/sigma-homework/model"
+	"github.com/alex-a-renoire/sigma-homework/service/authservice"
 	"github.com/google/uuid"
 )
 
@@ -16,23 +17,43 @@ type PersonStorage interface {
 }
 
 type PersonService struct {
-	db PersonStorage
+	db          PersonStorage
+	authService authservice.AuthService
 }
 
-func New(db PersonStorage) PersonService {
+func New(db PersonStorage, authService authservice.AuthService) PersonService {
 	return PersonService{
-		db: db,
+		db:          db,
+		authService: authService,
 	}
 }
 
-func (s PersonService) AddPerson(p model.AddUpdatePerson) (uuid.UUID, error) {
+func (s PersonService) AddPerson(p model.AddUpdatePerson) (model.PersonAuth, error) {
 	if err := p.Validate(); err != nil {
-		return uuid.Nil, fmt.Errorf("failed to validate person: %w", err)
+		return model.PersonAuth{}, fmt.Errorf("failed to validate person: %w", err)
 	}
 
-	return s.db.AddPerson(model.Person{
+	person := model.Person{
 		Name: p.Name,
-	})
+	}
+
+	id, err := s.db.AddPerson(person)
+	if err != nil {
+		return model.PersonAuth{}, fmt.Errorf("failed to add person to db: %w", err)
+	}
+
+	token, err := s.authService.GenerateConfirmationToken(person)
+	if err != nil {
+		return model.PersonAuth{}, fmt.Errorf("failed to generate jwt token for the user: %w", err)
+	}
+
+	ap := model.PersonAuth {
+		Id: id,
+		Name: p.Name,
+		Token: token,
+	}
+
+	return ap, nil
 }
 
 func (s PersonService) GetPerson(id uuid.UUID) (model.Person, error) {

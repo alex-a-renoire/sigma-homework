@@ -97,15 +97,14 @@ func (s *HTTPHandler) AddPerson(w http.ResponseWriter, req *http.Request) {
 	}
 
 	//send the appropriate action to service
-	id, err := s.service.AddPerson(person)
+	addedperson, err := s.service.AddPerson(person)
 	if err != nil {
 		s.reportError(w, err, InternalServerErr)
 		return
 	}
 
 	//Marshal person to json
-	person.Id = id
-	p, err = json.Marshal(person)
+	p, err = json.Marshal(addedperson)
 	if err != nil {
 		s.reportError(w, err, InternalServerErr)
 		return
@@ -113,7 +112,7 @@ func (s *HTTPHandler) AddPerson(w http.ResponseWriter, req *http.Request) {
 
 	//write the data to response
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Location", fmt.Sprintf("/persons/%d", id))
+	w.Header().Set("Location", fmt.Sprintf("/persons/%d", addedperson.Id))
 	w.WriteHeader(http.StatusCreated)
 	w.Write(p)
 }
