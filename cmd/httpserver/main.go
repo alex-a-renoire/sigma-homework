@@ -36,16 +36,14 @@ func main() {
 		case "postgres":
 			storage, err = pgstorage.New(cfg.PGAddress)
 			if err != nil {
-				log.Printf("failed to connect to db: %s", err)
-				return
+				log.Fatalf("failed to connect to db: %s", err)
 			}
 		case "redis":
 			storage = redisstorage.NewRDS(cfg.RedisAddress, cfg.RedisPassword, cfg.RedisDb)
 		case "mongo":
 			storage, err = mongostorage.New(cfg.MongoAddress, cfg.MongoUser, cfg.MongoPassword)
 			if err != nil {
-				log.Printf("failed to connect to db: %s", err)
-				return
+				log.Fatalf("failed to connect to db: %s", err)
 			}
 		}
 	} else if cfg.ConnType == "grpc" {
@@ -66,7 +64,7 @@ func main() {
 
 	csvservice := csvservice.New(personservice)
 
-	//create handler with controller
+	//create handler
 	sh := httphandler.New(personservice, *csvservice, authservice)
 
 	srv := http.Server{

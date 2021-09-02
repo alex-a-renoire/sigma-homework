@@ -6,21 +6,23 @@ all:
 all-mongo: 
 	cd docker; docker-compose build && docker-compose --profile mongo up
 
+.PHONY: all-redis
+all-mongo: 
+	cd docker; docker-compose build && docker-compose --profile redis up
+
+.PHONY: all-postgres
+all-mongo: 
+	cd docker; docker-compose build && docker-compose --profile postgres up
+
 .PHONY: tcpserver 
 tcpserver:
 	export TCP_ADDR=127.0.0.1:8080
 	go run cmd/tcpserver/*.go
 
-
 .PHONY: tcpclient
 tcpclient:
 	export TCP_ADDR=127.0.0.1:8080
 	go run cmd/client/main.go
-
-.PHONY: httpserver 
-httpserver:
-	export HTTP_ADDR=127.0.0.1:8081
-	go run cmd/httpserver/*.go
 
 .PHONY: test 
 test:

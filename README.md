@@ -1,13 +1,80 @@
-# A TCP client-server app for Persons | HTTP server for Persons
+# Go RESTful API dummy project
 
-It lets clients write data to the database. The basic entity is a person with a certain name. 
-Clients accept data in JSON format, e.g.:
+This package serves the goal of studying golang step by step and is implemented by myself in oder to learn various design patterns and libraries. 
 
-- AddPerson {"func_name":"AddPerson", "data":{"name":"Bob"}}
-- GetPerson {"func_name":"GetPerson", "data":{"id":1}}
-- GetAllPersons {"func_name":"GetAllPersons", "data":{}}
-- UpdatePerson {"func_name":"UpdatePerson", "data":{"id":1, "name":"Alice"}}
-- DeletePerson {"func_name":"DeletePerson", "data":{"id":1}}
+The basic entity the project deals with is person. For the moment, the following features are supported:
+
+- RESTful endpoints;
+- CRUD operations (mongodb, postgers, redis);
+- Upload and download entities in the CSV format;
+- JWT-based pseudo-authentication;
+- Environment dependent application configuration management;
+- Structured logging with contextual information;
+- Error handling with proper error response generation;
+- Data validation;
+
+The project uses the following go packages: 
+
+- Redis: <a href="github.com/go-redis/redis">go-redis/redis</a>
+- JWT: <a href="github.com/golang-jwt/jwt">golang-jwt/jwt</a>
+- UUID: <a href="github.com/google/uuid">google/uuid</a>
+- Routing: <a href="github.com/gorilla/mux">gorilla/mux</a>
+- CSV handling: <a href="github.com/jszwec/csvutil">jszwez/csvutil</a>
+- Postgres: <a href="github.com/lib/pq">lib/pq</a>
+- Mongo: <a href="go.mongodb.org/mongo-driver">mongo-driver</a>
+- GRPC: <a href="google.golang.org/grpc">grpc</a>
+
+## Getting started
+
+First, make sure you have *docker* and *docker-compose* installed on your system. To run the product with default configuration, open the root folder in bash and type:
+
+> make all
+
+To run the project with a cartain database (mongo, redis, postgres), type:
+
+> make all-mongo 
+
+or
+
+> make all-postgres
+
+etc.
+
+**Important!** You have to also specify the database type in the *docker/.env* file (DB_TYPE). 
+
+You can also select the type of storage connection (*remote* or *grpc*) (CONN_TYPE)
+
+By default, RESTful API server runs in a container at :8081. GRPC runs at :50051, redis at :6379, postgres at :5432 and mongo at :27017. The API provides the following endpoints:
+
+- <mark>GET /persons :</mark> Requests all persons from the database
+
+- <mark>POST /persons :</mark> Posts a person to the database. Returns its id.
+
+- <mark>GET /persons :</mark> Requests a person with a specified id
+
+- <mark>PUT /persons/{id} :</mark> Updates a person with a specified id
+
+- <mark>DELETE /persons/{id} :</mark> Deletes the person with a specified id
+
+- <mark>GET /persons/me :</mark> Looks at the JWT token and tells the user who she is
+
+- <mark>GET /persons/upload :</mark> Renders a webpage with a CSV document upload form
+
+- <mark>POST /persons/upload :</mark> Uploads the CSV document and saves the persons from the document to the database
+
+- <mark>GET /login/{id} :</mark> Generates a JWT token for the session
+
+The response format is JSON or a byte array in case of a JWT token.
+
+If you have <a href="https://httpie.io/">httpie</a> or some other API client tool (e.g. Postman), you may try the following more complex scenarios:
+
+> #post a user
+> http -v POST 127.0.0.1:8081/persons "Name"="Bob"
+> #should return a JSON like {id: sdfsdfsdf, name: Alice}
+>
+>
+
+Try the URL http://localhost:8081/persons in a browser, and you should see something like "OK v1.0.0" displayed.
 
 ## Cases accounted for: 
 
@@ -17,15 +84,6 @@ Clients accept data in JSON format, e.g.:
 - Wrong field value {"func_name":"wrong_func", "data":{"name":"Bob"}}
 - Delete / get a person with non-existent ID
 
-## How to run tcp-app
-
-make tcpserver
-make tcpclient
-make test
-
-## How to run http-app
-
-make httpserver
 
 ## how to test http-app
 
