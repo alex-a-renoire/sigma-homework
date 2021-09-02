@@ -15,6 +15,7 @@ services:
       - DB_TYPE
       - REDIS_ADDRESS
       - PG_ADDRESS
+      - JWT_SECRET
     volumes:
       - ./templates:/templates
 

@@ -30,9 +30,16 @@ func (s PersonService) AddPerson(p model.AddUpdatePerson) (uuid.UUID, error) {
 		return uuid.Nil, fmt.Errorf("failed to validate person: %w", err)
 	}
 
-	return s.db.AddPerson(model.Person{
+	person := model.Person{
 		Name: p.Name,
-	})
+	}
+
+	id, err := s.db.AddPerson(person)
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("failed to add person to db: %w", err)
+	}
+
+	return id, nil
 }
 
 func (s PersonService) GetPerson(id uuid.UUID) (model.Person, error) {

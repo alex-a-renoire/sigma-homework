@@ -11,6 +11,7 @@ import (
 	"text/template"
 
 	"github.com/alex-a-renoire/sigma-homework/model"
+	"github.com/alex-a-renoire/sigma-homework/service/authservice"
 	"github.com/alex-a-renoire/sigma-homework/service/csvservice"
 	"github.com/alex-a-renoire/sigma-homework/service/personservice"
 	"github.com/google/uuid"
@@ -22,12 +23,14 @@ import (
 type HTTPHandler struct {
 	service      personservice.PersonService
 	csvprocessor csvservice.CsvProcessor
+	authservice  authservice.AuthService
 }
 
-func New(srv personservice.PersonService, csvprocessor csvservice.CsvProcessor) HTTPHandler {
+func New(srv personservice.PersonService, csvprocessor csvservice.CsvProcessor, authservice authservice.AuthService) HTTPHandler {
 	return HTTPHandler{
 		service:      srv,
 		csvprocessor: csvprocessor,
+		authservice:  authservice,
 	}
 }
 
@@ -39,9 +42,12 @@ func (s *HTTPHandler) GetRouter() *mux.Router {
 	router.HandleFunc("/persons/dump", s.DownloadPersonsCSV).Methods("GET")
 	router.HandleFunc("/persons/upload", s.RenderTemplate).Methods("GET")
 	router.HandleFunc("/persons/upload", s.UploadPersonsCSV).Methods("POST")
+	router.HandleFunc("/persons/me", s.MyUser).Methods("GET")
 	router.HandleFunc("/persons/{id}", s.GetPerson).Methods("GET")
 	router.HandleFunc("/persons/{id}", s.UpdatePerson).Methods("PUT")
 	router.HandleFunc("/persons/{id}", s.DeletePerson).Methods("DELETE")
+
+	router.HandleFunc("/login/{id}", s.Login).Methods("GET")
 
 	router.Use(s.loggingMiddleware)
 
@@ -103,8 +109,9 @@ func (s *HTTPHandler) AddPerson(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	//Marshal person to json
 	person.Id = id
+
+	//Marshal person to json
 	p, err = json.Marshal(person)
 	if err != nil {
 		s.reportError(w, err, InternalServerErr)
@@ -277,6 +284,53 @@ func (s *HTTPHandler) UploadPersonsCSV(w http.ResponseWriter, req *http.Request)
 	w.WriteHeader(http.StatusOK)
 }
 
+////////
+//AUTH//
+////////
+
+func (s *HTTPHandler) Login(w http.ResponseWriter, req *http.Request) {
+	//get the route variable ID of the person we want to retrieve
+	vars := mux.Vars(req)
+	id, err := uuid.Parse(vars["id"])
+	if err != nil {
+		s.reportError(w, err, BadRequestErr)
+		return
+	}
+
+	//Find the person
+	person, err := s.service.GetPerson(id)
+	if err != nil {
+		s.reportError(w, err, InternalServerErr)
+		return
+	}
+
+	//If the person exists, issue a token
+	token, err := s.authservice.GenerateSessionToken(person)
+	if err != nil {
+		s.reportError(w, fmt.Errorf("failed to generate jwt token for the user: %w", err), InternalServerErr)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(token))
+}
+
+func (s *HTTPHandler) MyUser(w http.ResponseWriter, req *http.Request) {
+	tokenHeader := req.Header.Get("Authorization")
+
+	p, err := s.authservice.MyUser(tokenHeader)
+	if err != nil {
+		s.reportError(w, fmt.Errorf("failed to authenticate: %w", err), BadRequestErr)
+	}
+
+	person, err := json.Marshal(p)
+	if err != nil {
+		s.reportError(w, fmt.Errorf("failed to marshal person: %w", err), InternalServerErr)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(person)
+}
+
 //////////////
 //Middleware//
 //////////////
@@ -284,6 +338,7 @@ func (s *HTTPHandler) UploadPersonsCSV(w http.ResponseWriter, req *http.Request)
 func (s *HTTPHandler) loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println("Request received...")
+
 		next.ServeHTTP(w, r)
 	})
 }
