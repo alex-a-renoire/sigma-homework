@@ -15,28 +15,28 @@ The basic entity the project deals with is person. For the moment, the following
 
 The project uses the following go packages: 
 
-- Redis: <a href="github.com/go-redis/redis">go-redis/redis</a>
-- JWT: <a href="github.com/golang-jwt/jwt">golang-jwt/jwt</a>
-- UUID: <a href="github.com/google/uuid">google/uuid</a>
-- Routing: <a href="github.com/gorilla/mux">gorilla/mux</a>
-- CSV handling: <a href="github.com/jszwec/csvutil">jszwez/csvutil</a>
-- Postgres: <a href="github.com/lib/pq">lib/pq</a>
-- Mongo: <a href="go.mongodb.org/mongo-driver">mongo-driver</a>
-- GRPC: <a href="google.golang.org/grpc">grpc</a>
+- Redis: <a href="github.com/go-redis/redis"go-redis/redis</a
+- JWT: <a href="github.com/golang-jwt/jwt"golang-jwt/jwt</a
+- UUID: <a href="github.com/google/uuid"google/uuid</a
+- Routing: <a href="github.com/gorilla/mux"gorilla/mux</a
+- CSV handling: <a href="github.com/jszwec/csvutil"jszwez/csvutil</a
+- Postgres: <a href="github.com/lib/pq"lib/pq</a
+- Mongo: <a href="go.mongodb.org/mongo-driver"mongo-driver</a
+- GRPC: <a href="google.golang.org/grpc"grpc</a
 
-## Getting started
+# Getting started
 
 First, make sure you have *docker* and *docker-compose* installed on your system. To run the product with default configuration, open the root folder in bash and type:
 
-> make all
+ make all
 
 To run the project with a cartain database (mongo, redis, postgres), type:
 
-> make all-mongo 
+ make all-mongo 
 
 or
 
-> make all-postgres
+ make all-postgres
 
 etc.
 
@@ -46,61 +46,133 @@ You can also select the type of storage connection (*remote* or *grpc*) (CONN_TY
 
 By default, RESTful API server runs in a container at :8081. GRPC runs at :50051, redis at :6379, postgres at :5432 and mongo at :27017. The API provides the following endpoints:
 
-- <mark>GET /persons :</mark> Requests all persons from the database
+- `GET /persons` : Requests all persons from the database
 
-- <mark>POST /persons :</mark> Posts a person to the database. Returns its id.
+- `POST /persons` : Posts a person to the database. Returns its id.
 
-- <mark>GET /persons :</mark> Requests a person with a specified id
+- `GET /persons` : Requests a person with a specified id
 
-- <mark>PUT /persons/{id} :</mark> Updates a person with a specified id
+- `PUT /persons/{id}` : Updates a person with a specified id
 
-- <mark>DELETE /persons/{id} :</mark> Deletes the person with a specified id
+- `DELETE /persons/{id}` : Deletes the person with a specified id
 
-- <mark>GET /persons/me :</mark> Looks at the JWT token and tells the user who she is
+- `GET /persons/me` : Looks at the JWT token and tells the user who she is
 
-- <mark>GET /persons/upload :</mark> Renders a webpage with a CSV document upload form
+- `GET /persons/upload` : Renders a webpage with a CSV document upload form
 
-- <mark>POST /persons/upload :</mark> Uploads the CSV document and saves the persons from the document to the database
+- `POST /persons/upload` : Uploads the CSV document and saves the persons from the document to the database
 
-- <mark>GET /login/{id} :</mark> Generates a JWT token for the session
+- `GET /login/{id}` : Generates a JWT token for the session
 
 The response format is JSON or a byte array in case of a JWT token.
 
-If you have <a href="https://httpie.io/">httpie</a> or some other API client tool (e.g. Postman), you may try the following more complex scenarios:
+If you have <a href="https://httpie.io/"httpie</a or some other API client tool (e.g. Postman), you may try the following more complex scenarios:
 
-> #post a user
-> http -v POST 127.0.0.1:8081/persons "Name"="Bob"
-> #should return a JSON like {id: sdfsdfsdf, name: Alice}
->
->
+```
+# post a user
+http -v POST 127.0.0.1:8081/persons "Name"="Bob"
+# should return a JSON like {id: 7c7650fe-843c-476e-8132-ce754e15314c, name: Alice}
 
-Try the URL http://localhost:8081/persons in a browser, and you should see something like "OK v1.0.0" displayed.
+# get the list of users
+http -v GET 127.0.0.1:8081/persons
+# should return an array of JSONs like [{id: 7c7650fe-843c-476e-8132-ce754e15314c, name: Alice}]
 
-## Cases accounted for: 
+# get some certain user
+http -v GET 127.0.0.1:8081/persons/7c7650fe-843c-476e-8132-ce754e15314c
+# should return a JSON like {id: 7c7650fe-843c-476e-8132-ce754e15314c, name: Alice}
 
-- Input is not a JSON
-- Wrong data type of a json field: {"func_name":"GetPerson", "data":{"id":"1"}}
-- Wrong json field tag name / absence of a required field: {"func":"GetPerson", "data":{"id":1}} / {"func_name":"GetPerson"} / {"data":{"id":0}}
-- Wrong field value {"func_name":"wrong_func", "data":{"name":"Bob"}}
-- Delete / get a person with non-existent ID
+# delete some certain user
+http -v DELETE 127.0.0.1:8081/persons/7c7650fe-843c-476e-8132-ce754e15314c
+# should return 200 OK
+
+# update some certain user
+http -v PUT 127.0.0.1:8081/persons/7c7650fe-843c-476e-8132-ce754e15314c "Name"="Josh"
+# should return 200 OK
+
+# Get current session user user from JWT token 
+http -v GET 127.0.0.1:8081/persons/me 'Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzA1ODI1NzIsImlhdCI6MTYzMDU4MDc3MiwiSWQiOiI3Yzc2NTBmZS04NDNjLTQ3NmUtODEzMi1jZTc1NGUxNTMxNGMiLCJlbWFpbCI6IkJvYiJ9.4dr4kNWuKUiVIFxAv8v_fBmgWUOVopmnw7-NTApRWIU'
+# should return a JSON like {id: 7c7650fe-843c-476e-8132-ce754e15314c, name: Alice}
+```
 
 
-## how to test http-app
+Try the URLs http://localhost:8081/persons/download or http://localhost:8081/persons/upload in a browser to download or upload CSV files.
 
-
-- **REQUEST** http -v POST 127.0.0.1:8081/persons "Name"="Bob"      **RESPONSE**: Person with id 1 and name Bob added
-- **REQUEST** http -v POST 127.0.0.1:8081/persons "Name"="Alice"    **RESPONSE**: Person with id 2 and name Alice added
-- **REQUEST** http -v GET 127.0.0.1:8081/persons                    **RESPONSE**: All persons in the storage are [{1 Bob} {2 Alice}]
-- **REQUEST** http -v GET 127.0.0.1:8081/persons/1                  **RESPONSE**: Person with id 1 has name Bob
-- **REQUEST** http -v GET 127.0.0.1:8081/persons/3                  **RESPONSE**: there is no such record   
-- **REQUEST** http -v DELETE 127.0.0.1:8081/persons/1               **RESPONSE**: Person with id 1 deleted
-- **REQUEST** http -v GET 127.0.0.1:8081/persons/1                  **RESPONSE**: error: person with id 1 not found
-- **REQUEST** http -v GET 127.0.0.1:8081/persons                    **RESPONSE**: All persons in the storage are [{2 Alice}]
-- **REQUEST** http -v PUT 127.0.0.1:8081/persons/2 "Name"="Rachel" **RESPONSE**: Person with id 2 updated with name Rachel
-- **REQUEST** http -v GET 127.0.0.1:8081/persons                    **RESPONSE**: All persons in the storage are [{2 Rachel}]
-
-- **REQUEST** http -v GET 127.0.0.1:8081/persons/dump
-- **REQUEST** 127.0.0.1:8081/persons/upload
-- **REQUEST** http -v GET 127.0.0.1:8081/login/7c7650fe-843c-476e-8132-ce754e15314c
-
-http -v GET 127.0.0.1:8081/persons/myuser 'Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzA1ODI1NzIsImlhdCI6MTYzMDU4MDc3MiwiSWQiOiI3Yzc2NTBmZS04NDNjLTQ3NmUtODEzMi1jZTc1NGUxNTMxNGMiLCJlbWFpbCI6IkJvYiJ9.4dr4kNWuKUiVIFxAv8v_fBmgWUOVopmnw7-NTApRWIU'
+# Project layout
+```
+├── cmd                         main applications of the project
+│   ├── grpcserver              grpc server which features database functions
+│   │   ├── config.go           server configuration (from env file)
+│   │   └── main.go             
+│   ├── httpserver              http server 
+│   │   ├── config.go           
+│   │   └── main.go
+│   └── mem                     old tcp version of the project
+│       ├── client
+│       │   └── main.go
+│       └── tcpserver
+│           └── main.go
+├── docker                      
+│   ├── docker-compose.yaml     
+│   ├── Dockerfile              all the services are dockerized
+│   └── templates
+│       └── upload.html         template for the csv upload form
+├── go.mod
+├── go.sum
+├── Makefile
+├── model
+│   ├── action.go               is used only in old tcp version
+│   ├── errors.go
+│   ├── personaddupdate.go      models for different logic of the person
+│   └── person.go
+├── pkg
+│   ├── grpcserver
+│   │   ├── controller          
+│   │   │   └── controller.go   
+│   │   ├── proto
+│   │   │   ├── service_grpc.pb.go
+│   │   │   ├── service.pb.go
+│   │   │   └── service.proto
+│   │   └── server.go
+│   ├── httpserver
+│   │   └── handler
+│   │       ├── httphandler.go
+│   │       └── httphandler_test.go
+│   ├── storage
+│   │   ├── inmemory
+│   │   │   └── inmemory.go
+│   │   ├── mockstorage.go
+│   │   ├── mongostorage
+│   │   │   ├── init-mongo.js
+│   │   │   └── mongostorage.go
+│   │   ├── pgstorage
+│   │   │   ├── pgstorage.go
+│   │   │   └── schema.sql
+│   │   ├── redisstorage
+│   │   │   └── redisstorage.go
+│   │   └── storage.go
+│   └── tcpserver
+│       ├── controller
+│       │   └── controller.go
+│       ├── handler
+│       │   └── handler.go
+│       └── server.go
+├── README.md
+├── roadmap.txt
+└── service
+    ├── authservice
+    │   └── service.go
+    ├── csvservice
+    │   ├── service.go
+    │   ├── service_test.go
+    │   └── testdata
+    │       ├── add.csv
+    │       ├── empty.csv
+    │       ├── emptyfields.csv
+    │       ├── onlyheaders.csv
+    │       ├── rename.csv
+    │       ├── toomanyfields.csv
+    │       └── wrongid.csv
+    └── personservice
+        ├── service.go
+        └── service_test.go
+```
