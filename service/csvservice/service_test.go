@@ -7,7 +7,6 @@ import (
 
 	"github.com/alex-a-renoire/sigma-homework/model"
 	"github.com/alex-a-renoire/sigma-homework/pkg/storage"
-	"github.com/alex-a-renoire/sigma-homework/service/authservice"
 	"github.com/alex-a-renoire/sigma-homework/service/personservice"
 	"github.com/google/uuid"
 )
@@ -82,8 +81,7 @@ func TestCsvProcessor_ProcessCSV(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		auth := authservice.New("some_weak_secret")
-		srv := personservice.New(tt.fields.db, auth)
+		srv := personservice.New(tt.fields.db)
 
 		file, _ := os.Open(tt.file)
 		reader := csv.NewReader(file)

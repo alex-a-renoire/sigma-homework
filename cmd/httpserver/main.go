@@ -60,14 +60,14 @@ func main() {
 	}
 
 	//create services with storage
-	authservice := authservice.New(cfg.JWTSecret)
+	personservice := personservice.New(storage)
 
-	personservice := personservice.New(storage, authservice)
+	authservice := authservice.New(personservice, cfg.JWTSecret)
 
 	csvservice := csvservice.New(personservice)
 
 	//create handler with controller
-	sh := httphandler.New(personservice, *csvservice)
+	sh := httphandler.New(personservice, *csvservice, authservice)
 
 	srv := http.Server{
 		Addr:    cfg.HTTPAddr,

@@ -10,7 +10,6 @@ import (
 
 	"github.com/alex-a-renoire/sigma-homework/model"
 	"github.com/alex-a-renoire/sigma-homework/pkg/storage"
-	"github.com/alex-a-renoire/sigma-homework/service/authservice"
 	"github.com/alex-a-renoire/sigma-homework/service/personservice"
 	"github.com/google/uuid"
 )
@@ -175,8 +174,7 @@ func TestHttpHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			auth := authservice.New("some_weak_secret")
-			srv := personservice.New(tt.fields.s, auth)
+			srv := personservice.New(tt.fields.s)
 
 			s := &HTTPHandler{
 				service: srv,

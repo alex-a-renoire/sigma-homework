@@ -9,7 +9,6 @@ import (
 	"github.com/alex-a-renoire/sigma-homework/pkg/tcpserver"
 	tcpcontroller "github.com/alex-a-renoire/sigma-homework/pkg/tcpserver/controller"
 	"github.com/alex-a-renoire/sigma-homework/pkg/tcpserver/handler"
-	"github.com/alex-a-renoire/sigma-homework/service/authservice"
 	personservice "github.com/alex-a-renoire/sigma-homework/service/personservice"
 )
 
@@ -35,9 +34,7 @@ func main() {
 	s := inmemory.New()
 
 	//create a service
-	authService := authservice.New("some_unsafe_secret")
-
-	service := personservice.New(s, authService)
+	service := personservice.New(s)
 
 	//create a controller for transport layer
 	controller := tcpcontroller.New(service)

@@ -7,5 +7,6 @@ func (e Error) Error() string {
 }
 
 const (
-	ErrNotFound Error = "not found"
+	ErrNotFound  Error = "not found"
+	ErrForbidden Error = "forbidden"
 )

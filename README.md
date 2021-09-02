@@ -43,3 +43,6 @@ make httpserver
 
 - **REQUEST** http -v GET 127.0.0.1:8081/persons/dump
 - **REQUEST** 127.0.0.1:8081/persons/upload
+- **REQUEST** http -v GET 127.0.0.1:8081/login/7c7650fe-843c-476e-8132-ce754e15314c
+
+http -v GET 127.0.0.1:8081/persons/myuser 'Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzA1ODI1NzIsImlhdCI6MTYzMDU4MDc3MiwiSWQiOiI3Yzc2NTBmZS04NDNjLTQ3NmUtODEzMi1jZTc1NGUxNTMxNGMiLCJlbWFpbCI6IkJvYiJ9.4dr4kNWuKUiVIFxAv8v_fBmgWUOVopmnw7-NTApRWIU'

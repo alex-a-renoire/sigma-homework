@@ -13,7 +13,7 @@ import (
 )
 
 type PersonService interface {
-	AddPerson(p model.AddUpdatePerson) (model.PersonAuth, error)
+	AddPerson(p model.AddUpdatePerson) (uuid.UUID, error)
 	GetPerson(id uuid.UUID) (model.Person, error)
 	GetAllPersons() ([]model.Person, error)
 	UpdatePerson(id uuid.UUID, person model.AddUpdatePerson) error
