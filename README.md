@@ -6,6 +6,7 @@ The basic entity the project deals with is person. For the moment, the following
 
 - RESTful endpoints;
 - CRUD operations (mongodb, postgers, redis);
+- UUID is used as a primary key;
 - Upload and download entities in the CSV format;
 - JWT-based pseudo-authentication;
 - Environment dependent application configuration management;
@@ -15,34 +16,38 @@ The basic entity the project deals with is person. For the moment, the following
 
 The project uses the following go packages: 
 
-- Redis: <a href="github.com/go-redis/redis"go-redis/redis</a
-- JWT: <a href="github.com/golang-jwt/jwt"golang-jwt/jwt</a
-- UUID: <a href="github.com/google/uuid"google/uuid</a
-- Routing: <a href="github.com/gorilla/mux"gorilla/mux</a
-- CSV handling: <a href="github.com/jszwec/csvutil"jszwez/csvutil</a
-- Postgres: <a href="github.com/lib/pq"lib/pq</a
-- Mongo: <a href="go.mongodb.org/mongo-driver"mongo-driver</a
-- GRPC: <a href="google.golang.org/grpc"grpc</a
+- Redis: github.com/go-redis/redis
+- JWT: github.com/golang-jwt/jwt
+- UUID: github.com/google/uuid
+- Routing: github.com/gorilla/mux
+- CSV handling: github.com/jszwec/csvutil
+- Postgres: github.com/lib/pq
+- Mongo: go.mongodb.org/mongo-driver
+- GRPC: google.golang.org/grpc
 
 # Getting started
 
 First, make sure you have *docker* and *docker-compose* installed on your system. To run the product with default configuration, open the root folder in bash and type:
 
- make all
+> make all
 
 To run the project with a cartain database (mongo, redis, postgres), type:
 
- make all-mongo 
+> make all-mongo 
 
 or
 
- make all-postgres
+> make all-postgres
 
 etc.
 
 **Important!** You have to also specify the database type in the *docker/.env* file (DB_TYPE). 
 
 You can also select the type of storage connection (*remote* or *grpc*) (CONN_TYPE)
+
+To run tests type:
+
+> make tests
 
 By default, RESTful API server runs in a container at :8081. GRPC runs at :50051, redis at :6379, postgres at :5432 and mongo at :27017. The API provides the following endpoints:
 
@@ -66,7 +71,7 @@ By default, RESTful API server runs in a container at :8081. GRPC runs at :50051
 
 The response format is JSON or a byte array in case of a JWT token.
 
-If you have <a href="https://httpie.io/"httpie</a or some other API client tool (e.g. Postman), you may try the following more complex scenarios:
+If you have https://httpie.io/ or some other API client tool (e.g. Postman), you may try the following more complex scenarios:
 
 ```
 # post a user
@@ -157,9 +162,9 @@ Try the URLs http://localhost:8081/persons/download or http://localhost:8081/per
 │       │   └── handler.go
 │       └── server.go
 ├── README.md
-├── roadmap.txt
+├── roadmap.txt                 TODOs for the future
 └── service
-    ├── authservice
+    ├── authservice             Service to issue and JWTs and retrieve data from them
     │   └── service.go
     ├── csvservice
     │   ├── service.go
