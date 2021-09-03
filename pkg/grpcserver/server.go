@@ -10,7 +10,9 @@ import (
 	"github.com/alex-a-renoire/sigma-homework/model"
 	pb "github.com/alex-a-renoire/sigma-homework/pkg/grpcserver/proto"
 	"github.com/alex-a-renoire/sigma-homework/pkg/storage"
+	"github.com/go-redis/redis"
 	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -56,7 +58,7 @@ func (ss *StorageServer) GetPerson(_ context.Context, in *pb.UUID) (*pb.Person, 
 
 	p, err := ss.DB.GetPerson(id)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, sql.ErrNoRows) || errors.Is(err, mongo.ErrNoDocuments) || errors.Is(err, redis.Nil) {
 			return nil, status.Error(codes.NotFound, "no rows found")
 		}
 		errStr := fmt.Sprintf("failed to get person in grpc server: %s", err)
@@ -107,7 +109,7 @@ func (ss *StorageServer) UpdatePerson(_ context.Context, in *pb.Person) (*emptyp
 
 	err = ss.DB.UpdatePerson(id, person)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, sql.ErrNoRows) || errors.Is(err, mongo.ErrNoDocuments) || errors.Is(err, redis.Nil) {
 			status.Error(codes.NotFound, "no rows found")
 		}
 
@@ -128,7 +130,7 @@ func (ss *StorageServer) DeletePerson(_ context.Context, in *pb.DeletePersonRequ
 	}
 
 	if err := ss.DB.DeletePerson(id); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, sql.ErrNoRows) || errors.Is(err, mongo.ErrNoDocuments) || errors.Is(err, redis.Nil) {
 			status.Error(codes.NotFound, "no rows found")
 		}
 

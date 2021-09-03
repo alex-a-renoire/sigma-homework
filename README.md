@@ -55,19 +55,21 @@ By default, RESTful API server runs in a container at :8081. GRPC runs at :50051
 
 - `POST /persons` : Posts a person to the database. Returns its id.
 
-- `GET /persons` : Requests a person with a specified id
+- `GET /persons/{id}` : Requests a person with a specified id
 
 - `PUT /persons/{id}` : Updates a person with a specified id
 
 - `DELETE /persons/{id}` : Deletes the person with a specified id
 
-- `GET /persons/me` : Looks at the JWT token and tells the user who she is
+- `GET /persons/dump` : Downloads a CSV document with entities from database
 
 - `GET /persons/upload` : Renders a webpage with a CSV document upload form
 
 - `POST /persons/upload` : Uploads the CSV document and saves the persons from the document to the database
 
 - `GET /login/{id}` : Generates a JWT token for the session
+
+- `GET /persons/me` : Looks at the JWT token and tells the user who she is
 
 The response format is JSON or a byte array in case of a JWT token.
 
@@ -104,7 +106,7 @@ http -v GET 127.0.0.1:8081/persons/me 'Authorization: bearer eyJhbGciOiJIUzI1NiI
 ```
 
 
-Try the URLs http://localhost:8081/persons/download or http://localhost:8081/persons/upload in a browser to download or upload CSV files.
+Try the URLs http://localhost:8081/persons/dump or http://localhost:8081/persons/upload in a browser to download or upload CSV files.
 
 # Project layout
 ```
