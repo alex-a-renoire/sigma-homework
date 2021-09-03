@@ -314,6 +314,7 @@ func (s *HTTPHandler) Login(w http.ResponseWriter, req *http.Request) {
 	w.Write([]byte(token))
 }
 
+//Returns the user of the token provided
 func (s *HTTPHandler) MyUser(w http.ResponseWriter, req *http.Request) {
 	tokenHeader := req.Header.Get("Authorization")
 

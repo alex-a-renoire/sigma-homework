@@ -26,6 +26,6 @@ tcpclient:
 
 .PHONY: test 
 test:
-	go test -v ./pkg/httpserver/handler
+	go test -v ./service/csvservice/ ./service/personservice/
 
 

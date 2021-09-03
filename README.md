@@ -94,6 +94,10 @@ http -v DELETE 127.0.0.1:8081/persons/7c7650fe-843c-476e-8132-ce754e15314c
 http -v PUT 127.0.0.1:8081/persons/7c7650fe-843c-476e-8132-ce754e15314c "Name"="Josh"
 # should return 200 OK
 
+# get authorization token
+http -v GET 127.0.0.1:8081/login/7c7650fe-843c-476e-8132-ce754e15314c
+# should return token
+
 # Get current session user user from JWT token 
 http -v GET 127.0.0.1:8081/persons/me 'Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzA1ODI1NzIsImlhdCI6MTYzMDU4MDc3MiwiSWQiOiI3Yzc2NTBmZS04NDNjLTQ3NmUtODEzMi1jZTc1NGUxNTMxNGMiLCJlbWFpbCI6IkJvYiJ9.4dr4kNWuKUiVIFxAv8v_fBmgWUOVopmnw7-NTApRWIU'
 # should return a JSON like {id: 7c7650fe-843c-476e-8132-ce754e15314c, name: Alice}
@@ -131,7 +135,7 @@ Try the URLs http://localhost:8081/persons/download or http://localhost:8081/per
 │   └── person.go
 ├── pkg
 │   ├── grpcserver
-│   │   ├── controller          
+│   │   ├── controller          controller communicates with remote storage via GRPC. It's a GRPC client
 │   │   │   └── controller.go   
 │   │   ├── proto
 │   │   │   ├── service_grpc.pb.go

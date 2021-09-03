@@ -129,7 +129,6 @@ func (s GRPCСontroller) DeletePerson(id uuid.UUID) error {
 		Value: id.String(),
 	})
 
-	//we assume error is sql.no rows
 	if err != nil {
 		st, ok := status.FromError(err)
 		if !ok {

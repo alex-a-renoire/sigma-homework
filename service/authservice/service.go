@@ -77,7 +77,6 @@ func (as AuthService) MyUser(tokenHeader string) (model.Person, error) {
 	if claims, ok := token.Claims.(*SessionTokenClaims); ok && token.Valid {
 		if _, err := as.ps.GetPerson(claims.Id); err != nil {
 			return model.Person{}, fmt.Errorf("no such user: %w", err)
-
 		}
 
 		if claims.ExpiresAt < time.Now().Unix() {

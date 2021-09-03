@@ -1,15 +1,18 @@
 TODO:
- - On delete if no entity display error
- - validation in busines logic
- - add context to errors
- - proxy for grpc and service
+ - elastic search
  - помнить про лимиты - добавить таймауты на реквест
+ - ask how to close the connection to database gracefully
+ - перенести из GRPC контроллера в сервис проверки на то, что сущность есть в БД в случае апдейта и удаления
 
  IN PROGRESS:
- - JWT
  - check if csv works fine with mongo
 
  DONE:
  - add uuid to postgres and redis
  - CSV
  - MONGO
+ - On delete if no entity display error
+ - validation in busines logic
+ - add context to errors
+ - proxy for grpc and service
+ - JWT

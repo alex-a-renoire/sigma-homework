@@ -16,7 +16,6 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-//Declare the GRPC server
 type StorageServer struct {
 	pb.UnimplementedStorageServiceServer
 

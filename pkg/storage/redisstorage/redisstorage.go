@@ -73,11 +73,6 @@ func (db *RDSdb) GetAllPersons() ([]model.Person, error) {
 			return nil, fmt.Errorf("Failed to unmarshal persons string: %w", err)
 		}
 
-		// person.Id, err = uuid.Parse(strings.TrimPrefix(k, "person:"))
-		// if err != nil {
-		// 	return nil, fmt.Errorf("malformed id or prefix: %w", err)
-		// }
-
 		persons = append(persons, person)
 	}
 

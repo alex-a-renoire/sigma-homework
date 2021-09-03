@@ -15,7 +15,6 @@ type MongoPersonStorage struct {
 	Client *mongo.Client
 }
 
-//TODO: ask how to close the connection?
 func New(addr string, user string, password string) (*MongoPersonStorage, error) {
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://"+user+":"+password+"@"+addr+"/persons"))
 	if err != nil {
