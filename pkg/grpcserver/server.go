@@ -58,7 +58,7 @@ func (ss *StorageServer) GetPerson(_ context.Context, in *pb.UUID) (*pb.Person, 
 
 	p, err := ss.DB.GetPerson(id)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) || errors.Is(err, mongo.ErrNoDocuments) || errors.Is(err, redis.Nil) {
+		if errors.Is(err, sql.ErrNoRows) || errors.Is(err, mongo.ErrNoDocuments) || errors.Is(err, redis.Nil) || errors.Is(err, model.ErrNotFound) {
 			return nil, status.Error(codes.NotFound, "no rows found")
 		}
 		errStr := fmt.Sprintf("failed to get person in grpc server: %s", err)
@@ -109,7 +109,7 @@ func (ss *StorageServer) UpdatePerson(_ context.Context, in *pb.Person) (*emptyp
 
 	err = ss.DB.UpdatePerson(id, person)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) || errors.Is(err, mongo.ErrNoDocuments) || errors.Is(err, redis.Nil) {
+		if errors.Is(err, sql.ErrNoRows) || errors.Is(err, mongo.ErrNoDocuments) || errors.Is(err, redis.Nil) || errors.Is(err, model.ErrNotFound) {
 			status.Error(codes.NotFound, "no rows found")
 		}
 
@@ -130,7 +130,7 @@ func (ss *StorageServer) DeletePerson(_ context.Context, in *pb.DeletePersonRequ
 	}
 
 	if err := ss.DB.DeletePerson(id); err != nil {
-		if errors.Is(err, sql.ErrNoRows) || errors.Is(err, mongo.ErrNoDocuments) || errors.Is(err, redis.Nil) {
+		if errors.Is(err, sql.ErrNoRows) || errors.Is(err, mongo.ErrNoDocuments) || errors.Is(err, redis.Nil) || errors.Is(err, model.ErrNotFound) {
 			status.Error(codes.NotFound, "no rows found")
 		}
 

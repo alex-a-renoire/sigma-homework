@@ -16,6 +16,7 @@ services:
       - REDIS_ADDRESS
       - PG_ADDRESS
       - JWT_SECRET
+      - ELASTIC_ADDRESS
     volumes:
       - ./templates:/templates
 
@@ -33,6 +34,7 @@ services:
       - DB_TYPE
       - REDIS_ADDRESS
       - PG_ADDRESS
+      - ELASTIC_ADDRESS
   
   redis:
     image: redis
@@ -62,5 +64,10 @@ services:
       - ../pkg/storage/pgstorage/schema.sql:/docker-entrypoint-initdb.d/schema.sql
     profiles:
       - postgres
+
+  elastic:
+    image: elasticsearch:latest
+    profiles:
+      - elastic
 
       

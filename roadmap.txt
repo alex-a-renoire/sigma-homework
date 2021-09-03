@@ -1,11 +1,12 @@
 TODO:
- - elastic search
- - помнить про лимиты - добавить таймауты на реквест
+ - add timeouts to db transactions
  - ask how to close the connection to database gracefully
  - перенести из GRPC контроллера в сервис проверки на то, что сущность есть в БД в случае апдейта и удаления
+ - перенести из GRPC сервера в базы данных проверки типа errors.is sql no rows, чтобы в grpc сервере было всё унифицировано
 
  IN PROGRESS:
  - check if csv works fine with mongo
+ - elastic search
 
  DONE:
  - add uuid to postgres and redis
