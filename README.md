@@ -170,7 +170,7 @@ Try the URLs http://localhost:8081/persons/dump or http://localhost:8081/persons
 ├── README.md
 ├── roadmap.txt                 TODOs for the future
 └── service
-    ├── authservice             Service to issue and JWTs and retrieve data from them
+    ├── authservice             Service to issue JWTs and retrieve data from them
     │   └── service.go
     ├── csvservice
     │   ├── service.go
