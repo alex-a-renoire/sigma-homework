@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/alex-a-renoire/sigma-homework/model"
 	"github.com/elastic/go-elasticsearch/esapi"
@@ -12,8 +13,13 @@ import (
 	"github.com/google/uuid"
 )
 
-//http://www.inanzzz.com/index.php/post/6drl/a-simple-elasticsearch-crud-example-in-golang
-// TODO why do we need alias?
+const (
+	index = "persons"
+)
+
+type SearchResult struct {
+	Source model.Person `json:"_source,omitempty"`
+}
 
 type ElasticPersonStorage struct {
 	client elasticsearch.Client
@@ -42,21 +48,23 @@ func (eps ElasticPersonStorage) AddPerson(p model.Person) (uuid.UUID, error) {
 	}
 
 	req := esapi.CreateRequest{
+		Index:      index,
 		DocumentID: p.Id.String(),
 		Body:       bytes.NewReader(person),
 	}
 
 	res, err := req.Do(context.Background(), &eps.client)
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("failed to add person to db: %w", err)
+		return uuid.Nil, fmt.Errorf("failed to add person to db (elastic): %w", err)
 	}
 	defer res.Body.Close()
 
-	return uuid.Nil, nil
+	return p.Id, nil
 }
 
 func (eps ElasticPersonStorage) GetPerson(id uuid.UUID) (model.Person, error) {
 	req := esapi.GetRequest{
+		Index:      index,
 		DocumentID: id.String(),
 	}
 
@@ -66,20 +74,41 @@ func (eps ElasticPersonStorage) GetPerson(id uuid.UUID) (model.Person, error) {
 	}
 	defer res.Body.Close()
 
+	if res.StatusCode == 404 {
+		return model.Person{}, model.ErrNotFound
+	}
+
 	if res.IsError() {
 		return model.Person{}, fmt.Errorf("failed to get person: %s", res.String())
 	}
-	var p model.Person
 
-	if err := json.NewDecoder(res.Body).Decode(&p); err != nil {
-		return model.Person{}, fmt.Errorf("failed to unmarshal person: %s", res.String())
+	log.Printf("Res-body: %s", res.Body)
+
+	sr := SearchResult{}
+	if err := json.NewDecoder(res.Body).Decode(&sr); err != nil {
+		return model.Person{}, fmt.Errorf("failed to unmarshal person: %s", res.Body)
 	}
 
-	return p, nil
+	return sr.Source, nil
 }
 
 func (eps ElasticPersonStorage) GetAllPersons() ([]model.Person, error) {
-	return nil, nil
+	req := esapi.SearchRequest{
+		Index: []string{index},
+	}
+
+	resp, err := req.Do(context.Background(), &eps.client)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get persons from db: %w", err)
+	}
+
+	var persons []model.Person
+	err = json.NewDecoder(resp.Body).Decode(&persons)
+	if err != nil {
+		return nil, fmt.Errorf("sdfsdf: %w", err)
+	}
+
+	return persons, nil
 }
 
 func (eps ElasticPersonStorage) UpdatePerson(id uuid.UUID, person model.Person) error {
@@ -89,7 +118,7 @@ func (eps ElasticPersonStorage) UpdatePerson(id uuid.UUID, person model.Person) 
 	}
 
 	req := esapi.UpdateRequest{
-		//		Index:      p.elastic.alias, шо за хрень
+		Index:      index,
 		DocumentID: id.String(),
 		Body:       bytes.NewReader([]byte(fmt.Sprintf(`{"doc":%s}`, p))),
 	}
@@ -113,6 +142,7 @@ func (eps ElasticPersonStorage) UpdatePerson(id uuid.UUID, person model.Person) 
 
 func (eps ElasticPersonStorage) DeletePerson(id uuid.UUID) error {
 	req := esapi.DeleteRequest{
+		Index:      index,
 		DocumentID: id.String(),
 	}
 

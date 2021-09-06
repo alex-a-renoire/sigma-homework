@@ -3,6 +3,7 @@ module github.com/alex-a-renoire/sigma-homework
 go 1.16
 
 require (
+	github.com/ElasticHQ/elasticsearch-HQ v3.5.12+incompatible // indirect
 	github.com/elastic/go-elasticsearch v0.0.0
 	github.com/elastic/go-elasticsearch/v7 v7.14.0
 	github.com/go-redis/redis v6.15.9+incompatible

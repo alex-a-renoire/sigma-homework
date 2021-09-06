@@ -19,7 +19,7 @@ services:
       - ELASTIC_ADDRESS
     volumes:
       - ./templates:/templates
-
+    
   grpcserver:
     build:
       dockerfile: docker/Dockerfile
@@ -66,8 +66,10 @@ services:
       - postgres
 
   elastic:
-    image: elasticsearch:latest
+    image: elasticsearch:7.5.2
+    environment:
+    - "discovery.type=single-node"
+    - "node.name=es01"
     profiles:
       - elastic
-
       

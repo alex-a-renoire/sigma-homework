@@ -5,10 +5,10 @@ TODO:
  - перенести из GRPC сервера в базы данных проверки типа errors.is sql no rows, чтобы в grpc сервере было всё унифицировано
 
  IN PROGRESS:
- - check if csv works fine with mongo
  - elastic search
 
  DONE:
+  - check if csv works fine with mongo
  - add uuid to postgres and redis
  - CSV
  - MONGO
@@ -17,3 +17,6 @@ TODO:
  - add context to errors
  - proxy for grpc and service
  - JWT
+
+ Adds:
+ - Те структуры, у которых нет внутреннего состояния, которые не изменяемы, мы передаём не по ссылке
