@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/alex-a-renoire/sigma-homework/model"
 	"github.com/elastic/go-elasticsearch/esapi"
@@ -17,8 +16,16 @@ const (
 	index = "persons"
 )
 
-type SearchResult struct {
-	Source model.Person `json:"_source,omitempty"`
+type GetResult struct {
+	Source model.Person `json:"_source"`
+}
+
+type GetAllResult struct {
+	Hits struct {
+		Hits []struct {
+			Source model.Person `json:"_source"`
+		} `json:"hits"`
+	} `json:"hits"`
 }
 
 type ElasticPersonStorage struct {
@@ -82,14 +89,12 @@ func (eps ElasticPersonStorage) GetPerson(id uuid.UUID) (model.Person, error) {
 		return model.Person{}, fmt.Errorf("failed to get person: %s", res.String())
 	}
 
-	log.Printf("Res-body: %s", res.Body)
-
-	sr := SearchResult{}
-	if err := json.NewDecoder(res.Body).Decode(&sr); err != nil {
+	gr := GetResult{}
+	if err := json.NewDecoder(res.Body).Decode(&gr); err != nil {
 		return model.Person{}, fmt.Errorf("failed to unmarshal person: %s", res.Body)
 	}
 
-	return sr.Source, nil
+	return gr.Source, nil
 }
 
 func (eps ElasticPersonStorage) GetAllPersons() ([]model.Person, error) {
@@ -97,15 +102,27 @@ func (eps ElasticPersonStorage) GetAllPersons() ([]model.Person, error) {
 		Index: []string{index},
 	}
 
-	resp, err := req.Do(context.Background(), &eps.client)
+	res, err := req.Do(context.Background(), &eps.client)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get persons from db: %w", err)
 	}
 
-	var persons []model.Person
-	err = json.NewDecoder(resp.Body).Decode(&persons)
-	if err != nil {
-		return nil, fmt.Errorf("sdfsdf: %w", err)
+	if res.StatusCode == 404 {
+		return nil, model.ErrNotFound
+	}
+
+	if res.IsError() {
+		return nil, fmt.Errorf("failed to get persons: %s", res.String())
+	}
+
+	gar := GetAllResult{}
+	if err = json.NewDecoder(res.Body).Decode(&gar); err != nil {
+		return nil, fmt.Errorf("failed to get persons: %w", err)
+	}
+
+	persons := []model.Person{}
+	for _, p := range gar.Hits.Hits {
+		persons = append(persons, p.Source)
 	}
 
 	return persons, nil
