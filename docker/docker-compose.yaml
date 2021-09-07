@@ -16,9 +16,10 @@ services:
       - REDIS_ADDRESS
       - PG_ADDRESS
       - JWT_SECRET
+      - ELASTIC_ADDRESS
     volumes:
       - ./templates:/templates
-
+    
   grpcserver:
     build:
       dockerfile: docker/Dockerfile
@@ -33,6 +34,7 @@ services:
       - DB_TYPE
       - REDIS_ADDRESS
       - PG_ADDRESS
+      - ELASTIC_ADDRESS
   
   redis:
     image: redis
@@ -63,4 +65,11 @@ services:
     profiles:
       - postgres
 
+  elastic:
+    image: elasticsearch:7.5.2
+    environment:
+    - "discovery.type=single-node"
+    - "node.name=es01"
+    profiles:
+      - elastic
       

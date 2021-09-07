@@ -6,18 +6,19 @@ import (
 )
 
 type config struct {
-	HTTPAddr      string
-	ConnType      string
-	GRPCAddr      string
-	DBType        string
-	PGAddress     string
-	RedisAddress  string
-	RedisPassword string
-	RedisDb       int
-	MongoAddress  string
-	MongoUser     string
-	MongoPassword string
-	JWTSecret     string
+	HTTPAddr       string
+	ConnType       string
+	GRPCAddr       string
+	DBType         string
+	PGAddress      string
+	RedisAddress   string
+	RedisPassword  string
+	RedisDb        int
+	MongoAddress   string
+	MongoUser      string
+	MongoPassword  string
+	JWTSecret      string
+	ElasticAddress string
 }
 
 func getCfg() config {
@@ -86,24 +87,30 @@ func getCfg() config {
 		mongoPassword = "sigma"
 	}
 
-	//possible values: postgres, redis, mongo
+	elasticAddress := os.Getenv("ELASTIC_ADDRESS")
+	if elasticAddress == "" {
+		elasticAddress = ":9200"
+	}
+
+	//possible values: postgres, redis, mongo, elastic
 	DBType := os.Getenv("DB_TYPE")
 	if DBType == "" {
 		DBType = "mongo"
 	}
 
 	return config{
-		JWTSecret:     jwtSecret,
-		HTTPAddr:      HTTPAddr,
-		ConnType:      ConnType,
-		GRPCAddr:      GRPCAddr,
-		DBType:        DBType,
-		PGAddress:     pgAddress,
-		RedisAddress:  redisAddress,
-		RedisPassword: redisPassword,
-		RedisDb:       db,
-		MongoAddress:  mongoAddress,
-		MongoUser:     mongoUser,
-		MongoPassword: mongoPassword,
+		JWTSecret:      jwtSecret,
+		HTTPAddr:       HTTPAddr,
+		ConnType:       ConnType,
+		GRPCAddr:       GRPCAddr,
+		DBType:         DBType,
+		PGAddress:      pgAddress,
+		RedisAddress:   redisAddress,
+		RedisPassword:  redisPassword,
+		RedisDb:        db,
+		MongoAddress:   mongoAddress,
+		MongoUser:      mongoUser,
+		MongoPassword:  mongoPassword,
+		ElasticAddress: elasticAddress,
 	}
 }

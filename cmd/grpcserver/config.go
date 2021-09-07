@@ -6,15 +6,16 @@ import (
 )
 
 type config struct {
-	TCPport       string
-	DBType        string
-	PGAddress     string
-	RedisAddress  string
-	RedisPassword string
-	RedisDb       int
-	MongoAddress  string
-	MongoUser     string
-	MongoPassword string
+	TCPport        string
+	DBType         string
+	PGAddress      string
+	RedisAddress   string
+	RedisPassword  string
+	RedisDb        int
+	MongoAddress   string
+	MongoUser      string
+	MongoPassword  string
+	ElasticAddress string
 }
 
 func getOsVars() *config {
@@ -62,21 +63,27 @@ func getOsVars() *config {
 		mongoPassword = "sigma"
 	}
 
-	//possible values: postgres, redis, mongo
+	elasticAddress := os.Getenv("ELASTIC_ADDRESS")
+	if elasticAddress == "" {
+		elasticAddress = ":9200"
+	}
+
+	//possible values: postgres, redis, mongo, elastic
 	DBType := os.Getenv("DB_TYPE")
 	if DBType == "" {
 		DBType = "postgres"
 	}
 
 	return &config{
-		TCPport:       tcpPort,
-		DBType:        DBType,
-		PGAddress:     pgAddress,
-		RedisAddress:  redisAddress,
-		RedisPassword: redisPassword,
-		RedisDb:       db,
-		MongoAddress:  mongoAddress,
-		MongoUser:     mongoUser,
-		MongoPassword: mongoPassword,
+		TCPport:        tcpPort,
+		DBType:         DBType,
+		PGAddress:      pgAddress,
+		RedisAddress:   redisAddress,
+		RedisPassword:  redisPassword,
+		RedisDb:        db,
+		MongoAddress:   mongoAddress,
+		MongoUser:      mongoUser,
+		MongoPassword:  mongoPassword,
+		ElasticAddress: elasticAddress,
 	}
 }

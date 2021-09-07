@@ -7,6 +7,7 @@ import (
 	"github.com/alex-a-renoire/sigma-homework/pkg/grpcserver"
 	pb "github.com/alex-a-renoire/sigma-homework/pkg/grpcserver/proto"
 	"github.com/alex-a-renoire/sigma-homework/pkg/storage"
+	elastic "github.com/alex-a-renoire/sigma-homework/pkg/storage/elasticsearch"
 	"github.com/alex-a-renoire/sigma-homework/pkg/storage/mongostorage"
 	"github.com/alex-a-renoire/sigma-homework/pkg/storage/pgstorage"
 	"github.com/alex-a-renoire/sigma-homework/pkg/storage/redisstorage"
@@ -37,6 +38,11 @@ func main() {
 		db = redisstorage.NewRDS(cfg.RedisAddress, cfg.RedisPassword, cfg.RedisDb)
 	case "mongo":
 		db, err = mongostorage.New(cfg.MongoAddress, cfg.MongoUser, cfg.MongoPassword)
+		if err != nil {
+			log.Fatalf("failed to connect to db: %s", err)
+		}
+	case "elastic":
+		db, err = elastic.New(cfg.ElasticAddress)
 		if err != nil {
 			log.Fatalf("failed to connect to db: %s", err)
 		}

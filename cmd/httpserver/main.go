@@ -11,6 +11,7 @@ import (
 	grpccontroller "github.com/alex-a-renoire/sigma-homework/pkg/grpcserver/controller"
 	pb "github.com/alex-a-renoire/sigma-homework/pkg/grpcserver/proto"
 	httphandler "github.com/alex-a-renoire/sigma-homework/pkg/httpserver/handler"
+	elastic "github.com/alex-a-renoire/sigma-homework/pkg/storage/elasticsearch"
 	"github.com/alex-a-renoire/sigma-homework/pkg/storage/mongostorage"
 	"github.com/alex-a-renoire/sigma-homework/pkg/storage/pgstorage"
 	"github.com/alex-a-renoire/sigma-homework/pkg/storage/redisstorage"
@@ -42,6 +43,11 @@ func main() {
 			storage = redisstorage.NewRDS(cfg.RedisAddress, cfg.RedisPassword, cfg.RedisDb)
 		case "mongo":
 			storage, err = mongostorage.New(cfg.MongoAddress, cfg.MongoUser, cfg.MongoPassword)
+			if err != nil {
+				log.Fatalf("failed to connect to db: %s", err)
+			}
+		case "elastic":
+			storage, err = elastic.New(cfg.ElasticAddress)
 			if err != nil {
 				log.Fatalf("failed to connect to db: %s", err)
 			}
