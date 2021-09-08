@@ -1,0 +1,19 @@
+type Person {
+    id: String!
+    name: String!
+}
+
+input addUpdatePerson {
+    name: String!
+}
+
+type Query {
+    getAllPersons: [Person]!
+    getPerson(id: ID!): Person
+}
+
+type Mutation {
+    addPerson(person: addUpdatePerson!): ID!
+    updatePerson(id: ID!, person: addUpdatePerson!): ID!
+    deletePerson(id: ID!): ID!
+}

@@ -9,13 +9,18 @@ import (
 	"net/http"
 	"path/filepath"
 	"text/template"
+	"time"
 
+	"github.com/99designs/gqlgen/handler"
 	"github.com/alex-a-renoire/sigma-homework/model"
+	"github.com/alex-a-renoire/sigma-homework/pkg/graphql"
+	"github.com/alex-a-renoire/sigma-homework/pkg/graphql/resolver"
 	"github.com/alex-a-renoire/sigma-homework/service/authservice"
 	"github.com/alex-a-renoire/sigma-homework/service/csvservice"
 	"github.com/alex-a-renoire/sigma-homework/service/personservice"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 )
 
 //TODO: write a local interface
@@ -35,6 +40,8 @@ func New(srv personservice.PersonService, csvprocessor csvservice.CsvProcessor, 
 }
 
 func (s *HTTPHandler) GetRouter() *mux.Router {
+
+	gqlhandler := s.getGraphQLHandler(s.service)
 	router := mux.NewRouter()
 
 	router.HandleFunc("/persons", s.AddPerson).Methods("POST")
@@ -48,6 +55,8 @@ func (s *HTTPHandler) GetRouter() *mux.Router {
 	router.HandleFunc("/persons/{id}", s.DeletePerson).Methods("DELETE")
 
 	router.HandleFunc("/login/{id}", s.Login).Methods("GET")
+
+	router.HandleFunc("/gql", gqlhandler)
 
 	router.Use(s.loggingMiddleware)
 
@@ -330,6 +339,23 @@ func (s *HTTPHandler) MyUser(w http.ResponseWriter, req *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(person)
+}
+
+///////////
+//GraphQL//
+///////////
+func (s *HTTPHandler) getGraphQLHandler(personService personservice.PersonService) http.HandlerFunc {
+	resolver := resolver.New(personService)
+
+	graphqlConfig := graphql.NewExecutableSchema(graphql.Config{Resolvers: resolver})
+	websocketUpgrader := handler.WebsocketUpgrader(websocket.Upgrader{
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		}},
+	)
+
+	websocketKeepalive := handler.WebsocketKeepAliveDuration(time.Second * 5)
+	return handler.GraphQL(graphqlConfig, websocketUpgrader, websocketKeepalive)
 }
 
 //////////////

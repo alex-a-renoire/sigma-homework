@@ -1,5 +1,6 @@
 TODO:
  - add timeouts to db transactions
+ - Upload CSV: check if updates and make it wil uuid.nil to generate a new record
  - ask how to close the connection to database gracefully
  - перенести из GRPC контроллера в сервис проверки на то, что сущность есть в БД в случае апдейта и удаления
  - перенести из GRPC сервера в базы данных проверки типа errors.is sql no rows, чтобы в grpc сервере было всё унифицировано
@@ -18,5 +19,5 @@ TODO:
  - proxy for grpc and service
  - JWT
 
- Adds:
+ Notes:
  - Те структуры, у которых нет внутреннего состояния, которые не изменяемы, мы передаём не по ссылке
