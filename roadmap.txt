@@ -3,12 +3,17 @@ TODO:
  - ask how to close the connection to database gracefully
  - перенести из GRPC контроллера в сервис проверки на то, что сущность есть в БД в случае апдейта и удаления
  - перенести из GRPC сервера в базы данных проверки типа errors.is sql no rows, чтобы в grpc сервере было всё унифицировано
+ - сделать отдельные модели для разных уровней
+ - интеграционные тесты
+ - connection pool?
+ - добавить линтер golangci-lint
 
  IN PROGRESS:
- - elastic search
+ - Graphql
 
  DONE:
-  - check if csv works fine with mongo
+ - elastic search
+ - check if csv works fine with mongo
  - add uuid to postgres and redis
  - CSV
  - MONGO
